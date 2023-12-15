@@ -1,0 +1,359 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@1326.ve643e00e9220">
+  <actions>
+    <org.jenkinsci.plugins.workflow.multibranch.JobPropertyTrackerAction plugin="workflow-multibranch@756.v891d88f2cd46">
+      <jobPropertyDescriptors>
+        <string>hudson.model.ParametersDefinitionProperty</string>
+      </jobPropertyDescriptors>
+    </org.jenkinsci.plugins.workflow.multibranch.JobPropertyTrackerAction>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@2.2150.v4cfd8916915c"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@2.2150.v4cfd8916915c">
+      <jobProperties/>
+      <triggers/>
+      <parameters>
+        <string>CD3_TEMPLATE</string>
+      </parameters>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <com.sonyericsson.rebuild.RebuildSettings plugin="rebuild@330.v645b_7df10e2a_">
+      <autoRebuild>false</autoRebuild>
+      <rebuildDisabled>false</rebuildDisabled>
+    </com.sonyericsson.rebuild.RebuildSettings>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <io.jenkins.plugins.file__parameters.StashedFileParameterDefinition plugin="file-parameters@316.va_83a_1221db_a_7">
+          <name>CD3_TEMPLATE</name>
+          <description>Upload CD3 template file.
+Previously uploaded file will be used if left empty.</description>
+        </io.jenkins.plugins.file__parameters.StashedFileParameterDefinition>
+        <org.biouno.unochoice.ChoiceParameter plugin="uno-choice@2.8.1">
+          <name>Workflow</name>
+          <description>Select Automation Toolkit Workflow</description>
+          <randomName>choice-parameter-59286136223000</randomName>
+          <visibleItemCount>1</visibleItemCount>
+          <script class="org.biouno.unochoice.model.ScriptlerScript">
+            <scriptlerScriptId>Workflow.groovy</scriptlerScriptId>
+            <scriptlerBuilder plugin="scriptler@334.v29792d5a_c058">
+              <builderId>active-choices</builderId>
+              <scriptId>Workflow.groovy</scriptId>
+              <propagateParams>false</propagateParams>
+              <parameters/>
+            </scriptlerBuilder>
+            <isSandboxed>true</isSandboxed>
+          </script>
+          <choiceType>PT_RADIO</choiceType>
+        </org.biouno.unochoice.ChoiceParameter>
+        <org.biouno.unochoice.CascadeChoiceParameter plugin="uno-choice@2.8.1">
+          <name>MainOptions</name>
+          <description>Select Main Options</description>
+          <randomName>choice-parameter-59286164709167</randomName>
+          <visibleItemCount>1</visibleItemCount>
+          <script class="org.biouno.unochoice.model.ScriptlerScript">
+            <scriptlerScriptId>MainOptions.groovy</scriptlerScriptId>
+            <parameters class="linked-hash-map">
+              <entry>
+                <string>Workflow</string>
+                <string>${Workflow}</string>
+              </entry>
+            </parameters>
+            <scriptlerBuilder plugin="scriptler@334.v29792d5a_c058">
+              <builderId>active-choices</builderId>
+              <scriptId>MainOptions.groovy</scriptId>
+              <propagateParams>false</propagateParams>
+              <parameters>
+                <org.jenkinsci.plugins.scriptler.config.Parameter>
+                  <name>Workflow</name>
+                  <value>${Workflow}</value>
+                </org.jenkinsci.plugins.scriptler.config.Parameter>
+              </parameters>
+            </scriptlerBuilder>
+            <isSandboxed>true</isSandboxed>
+          </script>
+          <parameters class="linked-hash-map"/>
+          <referencedParameters>Workflow</referencedParameters>
+          <choiceType>PT_CHECKBOX</choiceType>
+        </org.biouno.unochoice.CascadeChoiceParameter>
+        <org.biouno.unochoice.CascadeChoiceParameter plugin="uno-choice@2.8.1">
+          <name>SubOptions</name>
+          <description>Select Sub Options</description>
+          <randomName>choice-parameter-59286166628000</randomName>
+          <visibleItemCount>1</visibleItemCount>
+          <script class="org.biouno.unochoice.model.ScriptlerScript">
+            <scriptlerScriptId>SubOptions.groovy</scriptlerScriptId>
+            <parameters class="linked-hash-map">
+              <entry>
+                <string>MainOptions</string>
+                <string>${MainOptions}</string>
+              </entry>
+            </parameters>
+            <scriptlerBuilder plugin="scriptler@334.v29792d5a_c058">
+              <builderId>active-choices</builderId>
+              <scriptId>SubOptions.groovy</scriptId>
+              <propagateParams>false</propagateParams>
+              <parameters>
+                <org.jenkinsci.plugins.scriptler.config.Parameter>
+                  <name>MainOptions</name>
+                  <value>${MainOptions}</value>
+                </org.jenkinsci.plugins.scriptler.config.Parameter>
+              </parameters>
+            </scriptlerBuilder>
+            <isSandboxed>true</isSandboxed>
+          </script>
+          <parameters class="linked-hash-map"/>
+          <referencedParameters>MainOptions</referencedParameters>
+          <choiceType>PT_CHECKBOX</choiceType>
+        </org.biouno.unochoice.CascadeChoiceParameter>
+        <org.biouno.unochoice.CascadeChoiceParameter plugin="uno-choice@2.8.1">
+          <name>SubChildOptions</name>
+          <description>Select Options for the SubOptions selected above</description>
+          <randomName>choice-parameter-59286167864625</randomName>
+          <visibleItemCount>1</visibleItemCount>
+          <script class="org.biouno.unochoice.model.ScriptlerScript">
+            <scriptlerScriptId>SubChildOptions.groovy</scriptlerScriptId>
+            <parameters class="linked-hash-map">
+              <entry>
+                <string>SubOptions</string>
+                <string>${SubOptions}</string>
+              </entry>
+            </parameters>
+            <scriptlerBuilder plugin="scriptler@334.v29792d5a_c058">
+              <builderId>active-choices</builderId>
+              <scriptId>SubChildOptions.groovy</scriptId>
+              <propagateParams>false</propagateParams>
+              <parameters>
+                <org.jenkinsci.plugins.scriptler.config.Parameter>
+                  <name>SubOptions</name>
+                  <value>${SubOptions}</value>
+                </org.jenkinsci.plugins.scriptler.config.Parameter>
+              </parameters>
+            </scriptlerBuilder>
+            <isSandboxed>true</isSandboxed>
+          </script>
+          <parameters class="linked-hash-map"/>
+          <referencedParameters>SubOptions</referencedParameters>
+          <choiceType>PT_CHECKBOX</choiceType>
+        </org.biouno.unochoice.CascadeChoiceParameter>
+        <org.biouno.unochoice.DynamicReferenceParameter plugin="uno-choice@2.8.1">
+          <name>AdditionalFilters</name>
+          <description>Select additional filters</description>
+          <randomName>choice-parameter-59286183239750</randomName>
+          <visibleItemCount>1</visibleItemCount>
+          <script class="org.biouno.unochoice.model.ScriptlerScript">
+            <scriptlerScriptId>AdditionalFilters.groovy</scriptlerScriptId>
+            <parameters class="linked-hash-map">
+              <entry>
+                <string>SubOptions</string>
+                <string>${SubOptions}</string>
+              </entry>
+              <entry>
+                <string>Workflow</string>
+                <string>${Workflow}</string>
+              </entry>
+            </parameters>
+            <scriptlerBuilder plugin="scriptler@334.v29792d5a_c058">
+              <builderId>active-choices</builderId>
+              <scriptId>AdditionalFilters.groovy</scriptId>
+              <propagateParams>false</propagateParams>
+              <parameters>
+                <org.jenkinsci.plugins.scriptler.config.Parameter>
+                  <name>SubOptions</name>
+                  <value>${SubOptions}</value>
+                </org.jenkinsci.plugins.scriptler.config.Parameter>
+                <org.jenkinsci.plugins.scriptler.config.Parameter>
+                  <name>Workflow</name>
+                  <value>${Workflow}</value>
+                </org.jenkinsci.plugins.scriptler.config.Parameter>
+              </parameters>
+            </scriptlerBuilder>
+            <isSandboxed>true</isSandboxed>
+          </script>
+          <parameters class="linked-hash-map"/>
+          <referencedParameters>Workflow,SubOptions</referencedParameters>
+          <choiceType>ET_FORMATTED_HTML</choiceType>
+          <omitValueField>false</omitValueField>
+        </org.biouno.unochoice.DynamicReferenceParameter>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@3826.v3b_5707fe44da_">
+    <script>
+properties([
+  parameters([
+    [
+        $class: &apos;ChoiceParameter&apos;,
+        choiceType: &apos;PT_RADIO&apos;,
+        description: &apos;Select Automation Toolkit Workflow&apos;,
+        name: &apos;Workflow&apos;,
+        script: [
+            $class: &apos;ScriptlerScript&apos;,
+            scriptlerScriptId:&apos;Workflow.groovy&apos;
+        ]
+    ],
+    [
+        $class: &apos;CascadeChoiceParameter&apos;,
+        choiceType: &apos;PT_CHECKBOX&apos;,
+        description: &apos;Select Main Options&apos;,
+        name: &apos;MainOptions&apos;,
+        referencedParameters: &apos;Workflow&apos;,
+        script: [
+            $class: &apos;ScriptlerScript&apos;,
+            scriptlerScriptId:&apos;MainOptions.groovy&apos;,
+            parameters: [
+                [name:&apos;Workflow&apos;, value: &apos;${Workflow}&apos;]
+            ]
+        ]
+   ],
+   [
+        $class: &apos;CascadeChoiceParameter&apos;,
+        choiceType: &apos;PT_CHECKBOX&apos;,
+        description: &apos;Select Sub Options&apos;,
+        name: &apos;SubOptions&apos;,
+        referencedParameters: &apos;MainOptions&apos;,
+        script: [
+            $class: &apos;ScriptlerScript&apos;,
+            scriptlerScriptId:&apos;SubOptions.groovy&apos;,
+            parameters: [
+                [name:&apos;MainOptions&apos;, value: &apos;${MainOptions}&apos;]
+            ]
+        ]
+   ],
+   [
+        $class: &apos;CascadeChoiceParameter&apos;,
+        choiceType: &apos;PT_CHECKBOX&apos;,
+        description: &apos;Select Options for the SubOptions selected above&apos;,
+        name: &apos;SubChildOptions&apos;,
+        referencedParameters: &apos;SubOptions&apos;,
+        script: [
+            $class: &apos;ScriptlerScript&apos;,
+            scriptlerScriptId:&apos;SubChildOptions.groovy&apos;,
+            parameters: [
+                [name:&apos;SubOptions&apos;, value: &apos;${SubOptions}&apos;]
+            ]
+        ]
+   ],
+   [
+        $class: &apos;DynamicReferenceParameter&apos;,
+        choiceType: &apos;ET_FORMATTED_HTML&apos;,
+        description: &apos;Select additional filters&apos;,
+        name: &apos;AdditionalFilters&apos;,
+        referencedParameters: &apos;Workflow,SubOptions&apos;,
+        script: [
+            $class: &apos;ScriptlerScript&apos;,
+            scriptlerScriptId: &apos;AdditionalFilters.groovy&apos;,
+            parameters: [
+                [name:&apos;SubOptions&apos;, value: &apos;${SubOptions}&apos;],
+                [name:&apos;Workflow&apos;, value: &apos;${Workflow}&apos;]
+            ]
+        ]
+    ]
+ ])
+])
+pipeline {
+    agent any
+    environment {
+        prop_file = &quot;/cd3user/tenancies/${customer_prefix}/${customer_prefix}_setUpOCI.properties&quot;
+
+    }
+    parameters {
+
+    stashedFile (
+        name: &apos;CD3_TEMPLATE&apos;,
+        description: &apos;&apos;&apos;Upload CD3 template file.
+Previously uploaded file will be used if left empty.&apos;&apos;&apos;
+        )
+
+    }
+    stages {
+    stage(&apos;Update setUpOCI.properties&apos;) {
+      steps {
+        withFileParameter(&apos;CD3_TEMPLATE&apos;) {
+          unstash &apos;CD3_TEMPLATE&apos;
+          sh &apos;&apos;&apos;
+            if [ $CD3_TEMPLATE_FILENAME ]; then
+                time_stamp=&quot;$(date +%m-%d-%Y-%H-%M-%S)&quot;
+                cd3_file=&quot;/cd3user/tenancies/${customer_prefix}/$CD3_TEMPLATE_FILENAME&quot;
+                cd3_backup=&quot;${cd3_file}_${time_stamp}&quot;
+                if [ -e $cd3_file ]; then
+                    cp $cd3_file $cd3_backup
+                fi
+                mv CD3_TEMPLATE $cd3_file
+                sed -i &quot;/cd3file=/ccd3file=${cd3_file}&quot; $prop_file
+            fi
+            &apos;&apos;&apos;
+        }
+        sh &apos;&apos;&apos;
+            if [ &quot;${Workflow}&quot; = &apos;Greenfield&apos; ]; then
+                sed -i &apos;/non_gf_tenancy=/cnon_gf_tenancy=false&apos; $prop_file
+            elif [ &quot;${Workflow}&quot; = &apos;Non-Greenfield&apos; ]; then
+                sed -i &apos;/non_gf_tenancy=/cnon_gf_tenancy=true&apos; $prop_file
+            else
+                exit
+            fi
+
+        &apos;&apos;&apos;
+
+      }
+
+    }
+
+
+stage(&apos;Execute setUpOCI&apos;) {
+    steps {
+        dir(&apos;/cd3user/oci_tools/cd3_automation_toolkit&apos;) {
+            sh &apos;&apos;&apos;
+                python --version
+                python setUpOCI_jenkins.py --main_options &quot;${MainOptions}&quot; --sub_options &quot;${SubOptions}&quot; --sub_child_options &quot;${SubChildOptions}&quot; --add_filter &quot;${AdditionalFilters}&quot; $prop_file || exit 1
+
+            &apos;&apos;&apos;
+        }
+    }
+}
+
+
+stage (&apos;Run Import Commands&apos;) {
+    when {
+
+        expression {return &quot;${Workflow}&quot; == &quot;Non-Greenfield&quot;}
+    }
+    steps {
+        dir(&apos;/cd3user/oci_tools/cd3_automation_toolkit&apos;) {
+            sh &apos;&apos;&apos;
+               cat exported_services
+            &apos;&apos;&apos;
+        }
+
+    }
+
+}
+
+stage (&apos;git commit&apos;) {
+
+    steps {
+        dir(&quot;/cd3user/tenancies/${customer_prefix}/terraform_files&quot;) {
+            sh &apos;&apos;&apos;
+                echo &quot;-----start timestamp-----&quot;
+                time_stamp=&quot;$(date +%m-%d-%Y-%H-%M-%S)&quot;
+                commit_msg=&quot;cd3 commit at ${time_stamp}&quot;
+                git add .
+                git commit -m &quot;${commit_msg}&quot;
+                git push
+
+             &apos;&apos;&apos;
+        }
+
+    }
+
+}
+
+  }
+}
+</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>
