@@ -3,9 +3,7 @@ import com.cloudbees.hudson.plugins.folder.*
 import jenkins.model.Jenkins
 
 Jenkins jenkins = Jenkins.instance
-
 def JENKINS_HOME = System.getenv("JENKINS_HOME")
-
 
 File file = new File("$JENKINS_HOME/jenkins.properties")
 file.withReader { reader ->

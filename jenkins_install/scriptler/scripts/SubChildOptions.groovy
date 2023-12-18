@@ -21,7 +21,5 @@ for (item in SubOptions.split(",")) {
     if (item.equals("CIS Compliance Checking Script")){
         final_list += cis
     }
-
-
 }
 return final_list

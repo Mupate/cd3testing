@@ -131,7 +131,7 @@ stage('OPA') {
                       return
                     }
 
-                    sh 'cd ${WORKSPACE}/${Region}/${Service} && terraform apply --auto-approve'
+                    sh 'cd ${WORKSPACE}/${Region}/${Service} && terraform apply --auto-approve tfplan.out'
                 }
             }
         }

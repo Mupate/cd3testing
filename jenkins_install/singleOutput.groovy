@@ -124,7 +124,7 @@ egion}/tfplan.json data.terraform.deny',returnStdout: true).trim()
                       return
                     }
 
-                    sh 'cd ${WORKSPACE}/${Region} && terraform apply --auto-approve'
+                    sh 'cd ${WORKSPACE}/${Region} && terraform apply --auto-approve tfplan.out'
                 }
             }
         }

@@ -1,22 +1,22 @@
 <?xml version='1.1' encoding='UTF-8'?>
 <flow-definition plugin="workflow-job@1326.ve643e00e9220">
   <actions>
-    <org.jenkinsci.plugins.workflow.multibranch.JobPropertyTrackerAction plugin="workflow-multibranch@756.v891d88f2cd46">
-      <jobPropertyDescriptors>
-        <string>hudson.model.ParametersDefinitionProperty</string>
-      </jobPropertyDescriptors>
-    </org.jenkinsci.plugins.workflow.multibranch.JobPropertyTrackerAction>
     <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@2.2150.v4cfd8916915c"/>
     <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@2.2150.v4cfd8916915c">
       <jobProperties/>
       <triggers/>
       <parameters>
-        <string>CD3_TEMPLATE</string>
+        <string>Excel_Template</string>
       </parameters>
       <options/>
     </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+    <org.jenkinsci.plugins.workflow.multibranch.JobPropertyTrackerAction plugin="workflow-multibranch@756.v891d88f2cd46">
+      <jobPropertyDescriptors>
+        <string>hudson.model.ParametersDefinitionProperty</string>
+      </jobPropertyDescriptors>
+    </org.jenkinsci.plugins.workflow.multibranch.JobPropertyTrackerAction>
   </actions>
-  <description></description>
+  <description>Execute setUpOCI</description>
   <keepDependencies>false</keepDependencies>
   <properties>
     <com.sonyericsson.rebuild.RebuildSettings plugin="rebuild@330.v645b_7df10e2a_">
@@ -26,14 +26,14 @@
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
         <io.jenkins.plugins.file__parameters.StashedFileParameterDefinition plugin="file-parameters@316.va_83a_1221db_a_7">
-          <name>CD3_TEMPLATE</name>
+          <name>Excel_Template</name>
           <description>Upload CD3 template file.
 Previously uploaded file will be used if left empty.</description>
         </io.jenkins.plugins.file__parameters.StashedFileParameterDefinition>
         <org.biouno.unochoice.ChoiceParameter plugin="uno-choice@2.8.1">
           <name>Workflow</name>
           <description>Select Automation Toolkit Workflow</description>
-          <randomName>choice-parameter-59286136223000</randomName>
+          <randomName>choice-parameter-17340230968999</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.ScriptlerScript">
             <scriptlerScriptId>Workflow.groovy</scriptlerScriptId>
@@ -50,7 +50,7 @@ Previously uploaded file will be used if left empty.</description>
         <org.biouno.unochoice.CascadeChoiceParameter plugin="uno-choice@2.8.1">
           <name>MainOptions</name>
           <description>Select Main Options</description>
-          <randomName>choice-parameter-59286164709167</randomName>
+          <randomName>choice-parameter-17340231330260</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.ScriptlerScript">
             <scriptlerScriptId>MainOptions.groovy</scriptlerScriptId>
@@ -80,7 +80,7 @@ Previously uploaded file will be used if left empty.</description>
         <org.biouno.unochoice.CascadeChoiceParameter plugin="uno-choice@2.8.1">
           <name>SubOptions</name>
           <description>Select Sub Options</description>
-          <randomName>choice-parameter-59286166628000</randomName>
+          <randomName>choice-parameter-17340231620923</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.ScriptlerScript">
             <scriptlerScriptId>SubOptions.groovy</scriptlerScriptId>
@@ -110,7 +110,7 @@ Previously uploaded file will be used if left empty.</description>
         <org.biouno.unochoice.CascadeChoiceParameter plugin="uno-choice@2.8.1">
           <name>SubChildOptions</name>
           <description>Select Options for the SubOptions selected above</description>
-          <randomName>choice-parameter-59286167864625</randomName>
+          <randomName>choice-parameter-17340231839770</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.ScriptlerScript">
             <scriptlerScriptId>SubChildOptions.groovy</scriptlerScriptId>
@@ -140,7 +140,7 @@ Previously uploaded file will be used if left empty.</description>
         <org.biouno.unochoice.DynamicReferenceParameter plugin="uno-choice@2.8.1">
           <name>AdditionalFilters</name>
           <description>Select additional filters</description>
-          <randomName>choice-parameter-59286183239750</randomName>
+          <randomName>choice-parameter-17340231996988</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.ScriptlerScript">
             <scriptlerScriptId>AdditionalFilters.groovy</scriptlerScriptId>
@@ -261,7 +261,7 @@ pipeline {
     parameters {
 
     stashedFile (
-        name: &apos;CD3_TEMPLATE&apos;,
+        name: &apos;Excel_Template&apos;,
         description: &apos;&apos;&apos;Upload CD3 template file.
 Previously uploaded file will be used if left empty.&apos;&apos;&apos;
         )
@@ -270,28 +270,32 @@ Previously uploaded file will be used if left empty.&apos;&apos;&apos;
     stages {
     stage(&apos;Update setUpOCI.properties&apos;) {
       steps {
-        withFileParameter(&apos;CD3_TEMPLATE&apos;) {
-          unstash &apos;CD3_TEMPLATE&apos;
+        withFileParameter(&apos;Excel_Template&apos;) {
+          unstash &apos;Excel_Template&apos;
           sh &apos;&apos;&apos;
-            if [ $CD3_TEMPLATE_FILENAME ]; then
+            if [ $Excel_Template_FILENAME ]; then
                 time_stamp=&quot;$(date +%m-%d-%Y-%H-%M-%S)&quot;
-                cd3_file=&quot;/cd3user/tenancies/${customer_prefix}/$CD3_TEMPLATE_FILENAME&quot;
+                cd3_file=&quot;/cd3user/tenancies/${customer_prefix}/$Excel_Template_FILENAME&quot;
                 cd3_backup=&quot;${cd3_file}_${time_stamp}&quot;
                 if [ -e $cd3_file ]; then
                     cp $cd3_file $cd3_backup
                 fi
-                mv CD3_TEMPLATE $cd3_file
-                sed -i &quot;/cd3file=/ccd3file=${cd3_file}&quot; $prop_file
+                mv Excel_Template $cd3_file
+                sed -i &quot;s|cd3file=.*|cd3file=${cd3_file}|g&quot; $prop_file
             fi
             &apos;&apos;&apos;
         }
         sh &apos;&apos;&apos;
-            if [ &quot;${Workflow}&quot; = &apos;Greenfield&apos; ]; then
-                sed -i &apos;/non_gf_tenancy=/cnon_gf_tenancy=false&apos; $prop_file
-            elif [ &quot;${Workflow}&quot; = &apos;Non-Greenfield&apos; ]; then
-                sed -i &apos;/non_gf_tenancy=/cnon_gf_tenancy=true&apos; $prop_file
+            if [ &quot;${Workflow}&quot; == &quot;Create Resources in OCI (Greenfield Workflow)&quot; ]; then
+                workflow=&quot;create_resources&quot;
+            elif [ &quot;${Workflow}&quot; == &quot;Export Resources from OCI (NonGreenfield Workflow)&quot; ]; then
+                workflow=&quot;export_resources&quot;
+            fi
+
+            if [ `grep &apos;^workflow_type&apos;  $prop_file` ] ; then
+                sed -i &quot;s/^workflow_type=.*/workflow_type=${workflow}/g&quot; $prop_file
             else
-                exit
+                echo &quot;\nworkflow_type=${workflow}&quot; &gt;&gt; $prop_file
             fi
 
         &apos;&apos;&apos;
@@ -317,12 +321,12 @@ stage(&apos;Execute setUpOCI&apos;) {
 stage (&apos;Run Import Commands&apos;) {
     when {
 
-        expression {return &quot;${Workflow}&quot; == &quot;Non-Greenfield&quot;}
+        expression {return &quot;${Workflow}&quot; == &quot;Export Resources from OCI (NonGreenfield Workflow)&quot;}
     }
     steps {
         dir(&apos;/cd3user/oci_tools/cd3_automation_toolkit&apos;) {
             sh &apos;&apos;&apos;
-               cat exported_services
+               echo &quot;running import scripts&quot;
             &apos;&apos;&apos;
         }
 

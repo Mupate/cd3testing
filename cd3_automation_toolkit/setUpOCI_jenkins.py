@@ -212,7 +212,6 @@ def export_identityOptions(options=[]):
 
 def export_compartmentPoliciesGroups(inputfile, outdir, service_dir, config, signer, ct):
     compartments = ct.get_compartment_map(var_file, 'Identity Objects')
-    print(compartments)
     Identity.export_identity(inputfile, outdir, service_dir, config, signer, ct, export_compartments=compartments)
     create_identity(options=['Add/Modify/Delete Compartments','Add/Modify/Delete Groups','Add/Modify/Delete Policies'])
     print("\n\nExecute tf_import_commands_identity_nonGF.sh script created under home region directory to synch TF with OCI Identity objects\n")
@@ -1115,7 +1114,13 @@ sub_child_options = args.sub_child_options.split(",")
 
 #Read Config file Variables
 try:
-    non_gf_tenancy = setUpOCI_props.get('Default', 'non_gf_tenancy').strip().lower() == 'true'
+    workflow_type = setUpOCI_props.get('Default', 'workflow_type').strip().lower()
+
+    if (workflow_type == 'export_resources'):
+        non_gf_tenancy = 'true'
+    else:
+        non_gf_tenancy = 'false'
+
     inputfile = setUpOCI_props.get('Default','cd3file').strip()
     outdir = setUpOCI_props.get('Default', 'outdir').strip()
     prefix = setUpOCI_props.get('Default', 'prefix').strip()

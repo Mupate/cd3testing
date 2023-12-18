@@ -1,1 +1,1 @@
-return ["Greenfield", "Non-Greenfield"]
+return ["Create Resources in OCI (Greenfield Workflow)", "Export Resources from OCI (NonGreenfield Workflow)"]
