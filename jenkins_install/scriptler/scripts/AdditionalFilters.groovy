@@ -106,7 +106,7 @@ for (item in SubOptions.split(",")) {
        </tr>
 <tr>
    <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"vault_comp=[\"></td>
-     <td><label title=\"service1-label\" class=\" \">Enter name of compartment as it appears in OCI Console : </label></td>
+     <td><label title=\"service1-label\" class=\" \">Enter name of compartment as it appears in OCI Console for Key/Vault: </label></td>
          <td><input type=\"text\" class=\" \" name=\"value\" > </br></td>
    <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"]@\"></td>
        </tr>

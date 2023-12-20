@@ -1244,9 +1244,9 @@ try:
     workflow_type = setUpOCI_props.get('Default', 'workflow_type').strip().lower()
 
     if (workflow_type == 'export_resources'):
-        non_gf_tenancy = 'true'
+        non_gf_tenancy = True
     else:
-        non_gf_tenancy = 'false'
+        non_gf_tenancy = False
 
     inputfile = setUpOCI_props.get('Default','cd3file').strip()
     outdir = setUpOCI_props.get('Default', 'outdir').strip()

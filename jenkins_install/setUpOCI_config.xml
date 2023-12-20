@@ -27,12 +27,12 @@
       <parameterDefinitions>
         <io.jenkins.plugins.file__parameters.StashedFileParameterDefinition plugin="file-parameters@316.va_83a_1221db_a_7">
           <name>Excel_Template</name>
-          <description>Upload CD3 template file.
+          <description>Upload excel file.
 Previously uploaded file will be used if left empty.</description>
         </io.jenkins.plugins.file__parameters.StashedFileParameterDefinition>
         <org.biouno.unochoice.ChoiceParameter plugin="uno-choice@2.8.1">
           <name>Workflow</name>
-          <description>Select Automation Toolkit Workflow</description>
+          <description>Choose Workflow Type</description>
           <randomName>choice-parameter-17340230968999</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.ScriptlerScript">

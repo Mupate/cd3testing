@@ -54,10 +54,10 @@ def add_column_data(reg, cname, AD_name, mt_display_name, vplussubnet, mnt_p_ip,
                                                                      values_for_column_fss)
 
 
-def __get_mount_info(cname, compartment_id, reg, availability_domain_name):
-    file_system = oci.file_storage.FileStorageClient(config,retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY)
-    network = oci.core.VirtualNetworkClient(config,retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY)
-    vnc_info = oci.core.VirtualNetworkClient(config,retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY)
+def __get_mount_info(cname, compartment_id, reg, availability_domain_name,signer):
+    file_system = oci.file_storage.FileStorageClient(config,retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY,signer=signer)
+    network = oci.core.VirtualNetworkClient(config,retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY,signer=signer)
+    vnc_info = oci.core.VirtualNetworkClient(config,retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY,signer=signer)
     global exports_ids
     AD_name = AD(availability_domain_name)
     try:
@@ -208,7 +208,7 @@ def export_fss(inputfile, outdir, service_dir, config1, signer1, ct, export_comp
         for ntk_compartment_name in export_compartments:
             ads = oci.identity.IdentityClient(config=config, retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY,signer=signer)
             for aval in ads.list_availability_domains(compartment_id=config['tenancy']).data:
-                __get_mount_info(ntk_compartment_name, ct.ntk_compartment_ids[ntk_compartment_name], reg, aval.name)
+                __get_mount_info(ntk_compartment_name, ct.ntk_compartment_ids[ntk_compartment_name], reg, aval.name,signer)
 
 
     commonTools.write_to_cd3(values_for_column_fss, cd3file, sheetName)

@@ -38,7 +38,7 @@ def create_devops_resources(config,signer):
 
     # Check existence of Topic
     toolkit_topic_id = ''
-    resource_search = oci.resource_search.ResourceSearchClient(config, retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY)
+    resource_search = oci.resource_search.ResourceSearchClient(config, retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY,signer=signer)
     ons_query = 'query onstopic resources where displayname = \''+topic_name+'\''
     ons_search_details = oci.resource_search.models.StructuredSearchDetails(type='Structured',
                                                                             query=ons_query)
@@ -186,7 +186,7 @@ def update_devops_config(prefix, repo_ssh_url,dir_values,devops_user,devops_user
 
     local_repo = git.Repo.init(devops_dir)
     f = open(devops_dir + ".gitignore", "w")
-    git_ignore_file_data = ".DS_Store\n*tfstate*\n*terraform*\ntfplan.out\ntfplan.json\n*backup*"
+    git_ignore_file_data = ".DS_Store\n*tfstate*\n*terraform*\ntfplan.out\ntfplan.json\n*backup*\ntf_import_commands*"
     f.write(git_ignore_file_data)
     f.close()
     existing_remote = local_repo.git.remote()
@@ -281,12 +281,12 @@ try:
     fingerprint=''
 
     if tenancy == "" or tenancy == "\n":
-        print("Invalid Tenancy ID. Please try again......Exiting !!")
+        print("Tenancy ID cannot be left empty...Exiting !!")
         exit(1)
 
     auth_mechanism = config.get('Default', 'auth_mechanism').strip().lower()
     if auth_mechanism == "" or auth_mechanism == "\n" or (auth_mechanism!='api_key' and auth_mechanism!='session_token' and auth_mechanism!='instance_principal'):
-        print("Invalid Auth Mechanism. Please try again......Exiting !!")
+        print("Auth Mechanism cannot be left empty...Exiting !!")
         exit(1)
 
     if auth_mechanism == 'api_key' or auth_mechanism == 'session_token':
@@ -297,12 +297,12 @@ try:
 
         fingerprint = config.get('Default', 'fingerprint').strip()
         if fingerprint == "" or fingerprint == "\n":
-            print("Invalid Fingerprint. Please try again......Exiting !!")
+            print("Fingerprint cannot be left empty...Exiting !!")
             exit(1)
 
         user = config.get('Default', 'user_ocid').strip()
         if user == "" or user == "\n":
-            print("Invalid User ID. Please try again......Exiting !!")
+            print("user_ocid cannot be left empty...Exiting !!")
             exit(1)
 
         key_path = config.get('Default', 'key_path').strip()
@@ -315,7 +315,7 @@ try:
         if auth_mechanism == 'session_token':
             session_token_file = config.get('Default', 'security_token_file').strip()
             if session_token_file == "" or session_token_file == "\n" or not os.path.isfile(session_token_file):
-                print("Invalid Session Token File. Please try again......Exiting !!")
+                print("Invalid path for Session Token File...Exiting !!")
                 exit(1)
 
     region = config.get('Default', 'region').strip()
@@ -335,14 +335,27 @@ try:
     devops_user_key = config.get('Default', 'oci_devops_git_key').strip()
 
     if use_devops == 'yes':
+        #Use remote state if using devops
         remote_state='yes'
+
+        # OCI DevOps GIT User Details are mandatory while using instance_principal
+        if auth_mechanism == 'instance_principal':
+            if devops_user == "" or devops_user == "\n" or devops_user_key == "" or devops_user_key == "\n":
+                print("OCI DevOps GIT User Details cannot be left empty when using instance_principal...Exiting !!")
+                exit(1)
+
         # Use same user and key as $user_ocid and $key_path for OCI Devops GIT operations
         if devops_user == '' or devops_user=="\n":
             devops_user = user
         if devops_user_key == '' or devops_user_key=="\n":
             devops_user_key = customer_tenancy_dir+"/"+os.path.basename(key_path)
 
+
     if remote_state == 'yes':
+        # Use same oci_devops_git_user for managing terraform remote state backend
+        remote_state_user=devops_user
+
+        # Bucket Name
         if remote_state_bucket == '' or remote_state_bucket == "\n":
             bucket_name = prefix + "-automation-toolkit-bucket"
         else:
@@ -457,21 +470,6 @@ if remote_state == "yes":
                                          signer=signer)
     namespace = buckets_client.get_namespace().data
     bucket_region,bucket_name=create_bucket(config,signer)
-
-
-    '''
-    try:
-        identity_client = oci.identity.IdentityClient(config=new_config, retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY,
-                                             signer=signer)
-        identity_client.list_domains( compartment_id=tenancy_id )
-        ## Add secret_key_creation for identity_domains
-        config.get("user")
-        print("Tenancy is Identity Domains enabled")
-        access_id = input("Please provide the access_key_id for user : ")
-        secret_key = input("Please provide secret_key : ")
-        credential_file_data="[default]\naws_access_key_id="+str(access_id)+"\naws_secret_access_key="+str(secret_key)
-
-    '''
     try:
         # Generate customer_secret_keys for remote state credentials
         new_config = deepcopy(config)
@@ -480,17 +478,28 @@ if remote_state == "yes":
         identity_client = oci.identity.IdentityClient(config=new_config, retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY,signer=signer)
         cred_name = prefix+"-automation-toolkit-csk"
 
+        # Get user ocid for DevOps User Name
+        if "ocid1.user.oc1" not in remote_state_user:
+            if '@' in remote_state_user:
+                remote_state_user = remote_state_user.rsplit("@",1)[0]
+
+            identity_client = oci.identity.IdentityClient(config=new_config,
+                                                          retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY,
+                                                          signer=signer)
+            user_data = identity_client.list_users(compartment_id=tenancy,name=remote_state_user).data
+            remote_state_user = user_data[0].id
+
         # check if credential exists
-        list_customer_secret_key_response = identity_client.list_customer_secret_keys(user_id=user).data
+        list_customer_secret_key_response = identity_client.list_customer_secret_keys(user_id=remote_state_user).data
         for keys in list_customer_secret_key_response:
             if keys.display_name == cred_name:
                 print("Another Customer secret key exists with same name. Deleting existing key and creating new key...")
                 customer_secret_key_id = keys.id
-                identity_client.delete_customer_secret_key(user_id=user,customer_secret_key_id=customer_secret_key_id)
+                identity_client.delete_customer_secret_key(user_id=remote_state_user,customer_secret_key_id=customer_secret_key_id)
         create_customer_secret_key_response = identity_client.create_customer_secret_key(
             create_customer_secret_key_details=oci.identity.models.CreateCustomerSecretKeyDetails(
                 display_name=cred_name),
-            user_id=user).data
+            user_id=remote_state_user).data
         credential_file_data="[default]\naws_access_key_id="+str(create_customer_secret_key_response.id)+"\naws_secret_access_key="+create_customer_secret_key_response.key+"\n"
     except Exception as e:
         print(e)
@@ -500,7 +509,6 @@ if remote_state == "yes":
     f.write(credential_file_data)
     f.close()
 
-    # Use replace method like other files
     for line in backend_file_data:
         if line.__contains__("This line will be removed when using remote state"):
             continue
