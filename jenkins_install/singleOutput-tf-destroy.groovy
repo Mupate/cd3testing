@@ -1,12 +1,3 @@
-properties([
-        parameters([
-                string(
-                        defaultValue: '',
-                        name: 'Region',
-                        trim: true
-                )
-        ])
-])
 /* Set the various stages of the build */
 pipeline {
     agent any
@@ -23,11 +14,22 @@ pipeline {
 
       steps {
           script {
-            sh 'cd ${WORKSPACE}/${Region}/ && terraform init -upgrade'
-            sh 'cd ${WORKSPACE}/${Region}/ && terraform plan -destroy'
+                    def jobName = env.JOB_NAME
+                    def parts = jobName.split('/')
+
+                    // Assuming job name format is <region_name>/job/job_name
+                    def regionName = parts[1]
+                    echo "Region Name: ${regionName}"
+
+                    // Set environment variables for reuse
+                    env.Region = regionName
+
+                    sh "cd \"${WORKSPACE}/${env.Region}\" && terraform init -upgrade"
+                    sh "cd \"${WORKSPACE}/${env.Region}\" && terraform plan -destroy"
                  }
             }
         }
+
      stage('Get Approval') {
         when {
         expression {
@@ -52,7 +54,7 @@ pipeline {
 
     steps {
         script {
-          sh 'cd ${WORKSPACE}/${Region}/ && terraform destroy --auto-approve'
+          sh "cd \"${WORKSPACE}/${env.Region}\" && terraform destroy --auto-approve"
                }
           }
     }

@@ -27,13 +27,13 @@
       <parameterDefinitions>
         <io.jenkins.plugins.file__parameters.StashedFileParameterDefinition plugin="file-parameters@316.va_83a_1221db_a_7">
           <name>Excel_Template</name>
-          <description>Upload excel file.
+          <description>Upload CD3 template file.
 Previously uploaded file will be used if left empty.</description>
         </io.jenkins.plugins.file__parameters.StashedFileParameterDefinition>
         <org.biouno.unochoice.ChoiceParameter plugin="uno-choice@2.8.1">
           <name>Workflow</name>
-          <description>Choose Workflow Type</description>
-          <randomName>choice-parameter-17340230968999</randomName>
+          <description>Select Automation Toolkit Workflow</description>
+          <randomName>choice-parameter-2607883905823</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.ScriptlerScript">
             <scriptlerScriptId>Workflow.groovy</scriptlerScriptId>
@@ -50,7 +50,7 @@ Previously uploaded file will be used if left empty.</description>
         <org.biouno.unochoice.CascadeChoiceParameter plugin="uno-choice@2.8.1">
           <name>MainOptions</name>
           <description>Select Main Options</description>
-          <randomName>choice-parameter-17340231330260</randomName>
+          <randomName>choice-parameter-2607884244206</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.ScriptlerScript">
             <scriptlerScriptId>MainOptions.groovy</scriptlerScriptId>
@@ -80,7 +80,7 @@ Previously uploaded file will be used if left empty.</description>
         <org.biouno.unochoice.CascadeChoiceParameter plugin="uno-choice@2.8.1">
           <name>SubOptions</name>
           <description>Select Sub Options</description>
-          <randomName>choice-parameter-17340231620923</randomName>
+          <randomName>choice-parameter-2607884438507</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.ScriptlerScript">
             <scriptlerScriptId>SubOptions.groovy</scriptlerScriptId>
@@ -110,7 +110,7 @@ Previously uploaded file will be used if left empty.</description>
         <org.biouno.unochoice.CascadeChoiceParameter plugin="uno-choice@2.8.1">
           <name>SubChildOptions</name>
           <description>Select Options for the SubOptions selected above</description>
-          <randomName>choice-parameter-17340231839770</randomName>
+          <randomName>choice-parameter-2607884582379</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.ScriptlerScript">
             <scriptlerScriptId>SubChildOptions.groovy</scriptlerScriptId>
@@ -140,7 +140,7 @@ Previously uploaded file will be used if left empty.</description>
         <org.biouno.unochoice.DynamicReferenceParameter plugin="uno-choice@2.8.1">
           <name>AdditionalFilters</name>
           <description>Select additional filters</description>
-          <randomName>choice-parameter-17340231996988</randomName>
+          <randomName>choice-parameter-2607884736600</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.ScriptlerScript">
             <scriptlerScriptId>AdditionalFilters.groovy</scriptlerScriptId>
@@ -180,180 +180,221 @@ Previously uploaded file will be used if left empty.</description>
     </hudson.model.ParametersDefinitionProperty>
   </properties>
   <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@3826.v3b_5707fe44da_">
-    <script>
+    <script>def generateStage(job) {
+    return {
+        stage(&quot;stage: ${job}&quot;) {
+
+            sh &apos;&apos;&apos;
+            date +%m-%d-%Y-%H-%M-%S
+            &apos;&apos;&apos;
+            def values = job.split(&apos;/&apos;)
+            region = values[0]
+            service = values[1]
+            job_name = &quot;./terraform_files/${region}/${service}/terraform-apply&quot;.replace(&quot;//&quot;,&quot;/&quot;)
+            build job: &quot;${job_name}&quot;,
+                parameters:
+                [string(name: &apos;Region&apos;, value: region),
+                string(name: &apos;Service&apos;, value: service)
+                ]
+        }
+    }
+}
 properties([
-  parameters([
-    [
-        $class: &apos;ChoiceParameter&apos;,
-        choiceType: &apos;PT_RADIO&apos;,
-        description: &apos;Select Automation Toolkit Workflow&apos;,
-        name: &apos;Workflow&apos;,
-        script: [
-            $class: &apos;ScriptlerScript&apos;,
-            scriptlerScriptId:&apos;Workflow.groovy&apos;
-        ]
-    ],
-    [
-        $class: &apos;CascadeChoiceParameter&apos;,
-        choiceType: &apos;PT_CHECKBOX&apos;,
-        description: &apos;Select Main Options&apos;,
-        name: &apos;MainOptions&apos;,
-        referencedParameters: &apos;Workflow&apos;,
-        script: [
-            $class: &apos;ScriptlerScript&apos;,
-            scriptlerScriptId:&apos;MainOptions.groovy&apos;,
-            parameters: [
-                [name:&apos;Workflow&apos;, value: &apos;${Workflow}&apos;]
+    parameters([
+        [
+            $class: &apos;ChoiceParameter&apos;,
+            choiceType: &apos;PT_RADIO&apos;,
+            description: &apos;Select Automation Toolkit Workflow&apos;,
+            name: &apos;Workflow&apos;,
+            script: [
+                $class: &apos;ScriptlerScript&apos;,
+                scriptlerScriptId:&apos;Workflow.groovy&apos;
+            ]
+        ],
+        [
+            $class: &apos;CascadeChoiceParameter&apos;,
+            choiceType: &apos;PT_CHECKBOX&apos;,
+            description: &apos;Select Main Options&apos;,
+            name: &apos;MainOptions&apos;,
+            referencedParameters: &apos;Workflow&apos;,
+            script: [
+                $class: &apos;ScriptlerScript&apos;,
+                scriptlerScriptId:&apos;MainOptions.groovy&apos;,
+                parameters: [
+                    [name:&apos;Workflow&apos;, value: &apos;${Workflow}&apos;]
+                ]
+            ]
+       ],
+       [
+            $class: &apos;CascadeChoiceParameter&apos;,
+            choiceType: &apos;PT_CHECKBOX&apos;,
+            description: &apos;Select Sub Options&apos;,
+            name: &apos;SubOptions&apos;,
+            referencedParameters: &apos;MainOptions&apos;,
+            script: [
+                $class: &apos;ScriptlerScript&apos;,
+                scriptlerScriptId:&apos;SubOptions.groovy&apos;,
+                parameters: [
+                    [name:&apos;MainOptions&apos;, value: &apos;${MainOptions}&apos;]
+                ]
+            ]
+       ],
+       [
+            $class: &apos;CascadeChoiceParameter&apos;,
+            choiceType: &apos;PT_CHECKBOX&apos;,
+            description: &apos;Select Options for the SubOptions selected above&apos;,
+            name: &apos;SubChildOptions&apos;,
+            referencedParameters: &apos;SubOptions&apos;,
+            script: [
+                $class: &apos;ScriptlerScript&apos;,
+                scriptlerScriptId:&apos;SubChildOptions.groovy&apos;,
+                parameters: [
+                    [name:&apos;SubOptions&apos;, value: &apos;${SubOptions}&apos;]
+                ]
+            ]
+       ],
+       [
+            $class: &apos;DynamicReferenceParameter&apos;,
+            choiceType: &apos;ET_FORMATTED_HTML&apos;,
+            description: &apos;Select additional filters&apos;,
+            name: &apos;AdditionalFilters&apos;,
+            referencedParameters: &apos;Workflow,SubOptions&apos;,
+            script: [
+                $class: &apos;ScriptlerScript&apos;,
+                scriptlerScriptId: &apos;AdditionalFilters.groovy&apos;,
+                parameters: [
+                    [name:&apos;SubOptions&apos;, value: &apos;${SubOptions}&apos;],
+                    [name:&apos;Workflow&apos;, value: &apos;${Workflow}&apos;]
+                ]
             ]
         ]
-   ],
-   [
-        $class: &apos;CascadeChoiceParameter&apos;,
-        choiceType: &apos;PT_CHECKBOX&apos;,
-        description: &apos;Select Sub Options&apos;,
-        name: &apos;SubOptions&apos;,
-        referencedParameters: &apos;MainOptions&apos;,
-        script: [
-            $class: &apos;ScriptlerScript&apos;,
-            scriptlerScriptId:&apos;SubOptions.groovy&apos;,
-            parameters: [
-                [name:&apos;MainOptions&apos;, value: &apos;${MainOptions}&apos;]
-            ]
-        ]
-   ],
-   [
-        $class: &apos;CascadeChoiceParameter&apos;,
-        choiceType: &apos;PT_CHECKBOX&apos;,
-        description: &apos;Select Options for the SubOptions selected above&apos;,
-        name: &apos;SubChildOptions&apos;,
-        referencedParameters: &apos;SubOptions&apos;,
-        script: [
-            $class: &apos;ScriptlerScript&apos;,
-            scriptlerScriptId:&apos;SubChildOptions.groovy&apos;,
-            parameters: [
-                [name:&apos;SubOptions&apos;, value: &apos;${SubOptions}&apos;]
-            ]
-        ]
-   ],
-   [
-        $class: &apos;DynamicReferenceParameter&apos;,
-        choiceType: &apos;ET_FORMATTED_HTML&apos;,
-        description: &apos;Select additional filters&apos;,
-        name: &apos;AdditionalFilters&apos;,
-        referencedParameters: &apos;Workflow,SubOptions&apos;,
-        script: [
-            $class: &apos;ScriptlerScript&apos;,
-            scriptlerScriptId: &apos;AdditionalFilters.groovy&apos;,
-            parameters: [
-                [name:&apos;SubOptions&apos;, value: &apos;${SubOptions}&apos;],
-                [name:&apos;Workflow&apos;, value: &apos;${Workflow}&apos;]
-            ]
-        ]
-    ]
- ])
+    ])
 ])
+
 pipeline {
     agent any
     environment {
         prop_file = &quot;/cd3user/tenancies/${customer_prefix}/${customer_prefix}_setUpOCI.properties&quot;
+        current_timestamp = sh (script: &apos;date +%m-%d-%Y-%H-%M-%S&apos;, returnStdout: true).trim()
 
     }
     parameters {
-
-    stashedFile (
-        name: &apos;Excel_Template&apos;,
-        description: &apos;&apos;&apos;Upload CD3 template file.
-Previously uploaded file will be used if left empty.&apos;&apos;&apos;
-        )
-
+        stashedFile (
+            name: &apos;Excel_Template&apos;,
+            description: &quot;Upload CD3 template file.\nPreviously uploaded file will be used if left empty.&quot;
+            )
     }
     stages {
-    stage(&apos;Update setUpOCI.properties&apos;) {
-      steps {
-        withFileParameter(&apos;Excel_Template&apos;) {
-          unstash &apos;Excel_Template&apos;
-          sh &apos;&apos;&apos;
-            if [ $Excel_Template_FILENAME ]; then
-                time_stamp=&quot;$(date +%m-%d-%Y-%H-%M-%S)&quot;
-                cd3_file=&quot;/cd3user/tenancies/${customer_prefix}/$Excel_Template_FILENAME&quot;
-                cd3_backup=&quot;${cd3_file}_${time_stamp}&quot;
-                if [ -e $cd3_file ]; then
-                    cp $cd3_file $cd3_backup
-                fi
-                mv Excel_Template $cd3_file
-                sed -i &quot;s|cd3file=.*|cd3file=${cd3_file}|g&quot; $prop_file
-            fi
-            &apos;&apos;&apos;
-        }
-        sh &apos;&apos;&apos;
-            if [ &quot;${Workflow}&quot; == &quot;Create Resources in OCI (Greenfield Workflow)&quot; ]; then
-                workflow=&quot;create_resources&quot;
-            elif [ &quot;${Workflow}&quot; == &quot;Export Resources from OCI (NonGreenfield Workflow)&quot; ]; then
-                workflow=&quot;export_resources&quot;
-            fi
+        stage(&apos;Update setUpOCI.properties&apos;) {
+            steps {
+                withFileParameter(&apos;Excel_Template&apos;) {
+                    unstash &apos;Excel_Template&apos;
+                    sh &apos;&apos;&apos;
+                        if [ $Excel_Template_FILENAME ]; then
+                            time_stamp=&quot;$(date +%m-%d-%Y-%H-%M-%S)&quot;
+                            cd3_file=&quot;/cd3user/tenancies/${customer_prefix}/$Excel_Template_FILENAME&quot;
+                            cd3_backup=&quot;${cd3_file}_${time_stamp}&quot;
+                            if [ -e $cd3_file ]; then
+                                cp $cd3_file $cd3_backup
+                            fi
+                            mv Excel_Template $cd3_file
+                            sed -i &quot;s|cd3file=.*|cd3file=${cd3_file}|g&quot; $prop_file
+                        fi
+                    &apos;&apos;&apos;
+                }
+                sh &apos;&apos;&apos;
+                    if [ &quot;${Workflow}&quot; == &quot;Create Resources in OCI (Greenfield Workflow)&quot; ]; then
+                        workflow=&quot;create_resources&quot;
+                    elif [ &quot;${Workflow}&quot; == &quot;Export Resources from OCI (NonGreenfield Workflow)&quot; ]; then
+                        workflow=&quot;export_resources&quot;
+                    fi
 
-            if [ `grep &apos;^workflow_type&apos;  $prop_file` ] ; then
-                sed -i &quot;s/^workflow_type=.*/workflow_type=${workflow}/g&quot; $prop_file
-            else
-                echo &quot;\nworkflow_type=${workflow}&quot; &gt;&gt; $prop_file
-            fi
-
-        &apos;&apos;&apos;
-
-      }
-
-    }
-
-
-stage(&apos;Execute setUpOCI&apos;) {
-    steps {
-        dir(&apos;/cd3user/oci_tools/cd3_automation_toolkit&apos;) {
-            sh &apos;&apos;&apos;
-                python --version
-                python setUpOCI_jenkins.py --main_options &quot;${MainOptions}&quot; --sub_options &quot;${SubOptions}&quot; --sub_child_options &quot;${SubChildOptions}&quot; --add_filter &quot;${AdditionalFilters}&quot; $prop_file || exit 1
-
-            &apos;&apos;&apos;
-        }
-    }
-}
-
-
-stage (&apos;Run Import Commands&apos;) {
-    when {
-
-        expression {return &quot;${Workflow}&quot; == &quot;Export Resources from OCI (NonGreenfield Workflow)&quot;}
-    }
-    steps {
-        dir(&apos;/cd3user/oci_tools/cd3_automation_toolkit&apos;) {
-            sh &apos;&apos;&apos;
-               echo &quot;running import scripts&quot;
-            &apos;&apos;&apos;
+                    if [ `grep &apos;^workflow_type&apos;  $prop_file` ] ; then
+                        sed -i &quot;s/^workflow_type=.*/workflow_type=${workflow}/g&quot; $prop_file
+                    else
+                        echo &quot;\nworkflow_type=${workflow}&quot; &gt;&gt; $prop_file
+                    fi
+                &apos;&apos;&apos;
+            }
         }
 
-    }
-
-}
-
-stage (&apos;git commit&apos;) {
-
-    steps {
-        dir(&quot;/cd3user/tenancies/${customer_prefix}/terraform_files&quot;) {
-            sh &apos;&apos;&apos;
-                echo &quot;-----start timestamp-----&quot;
-                time_stamp=&quot;$(date +%m-%d-%Y-%H-%M-%S)&quot;
-                commit_msg=&quot;cd3 commit at ${time_stamp}&quot;
-                git add .
-                git commit -m &quot;${commit_msg}&quot;
-                git push
-
-             &apos;&apos;&apos;
+        stage(&apos;Execute setUpOCI&apos;) {
+            steps {
+                dir(&apos;/cd3user/oci_tools/cd3_automation_toolkit&apos;) {
+                    sh &apos;&apos;&apos;
+                        python --version
+                        python setUpOCI_jenkins.py --main_options &quot;${MainOptions}&quot; --sub_options &quot;${SubOptions}&quot; --sub_child_options &quot;${SubChildOptions}&quot; --add_filter &quot;${AdditionalFilters}&quot; $prop_file || exit 1
+                    &apos;&apos;&apos;
+                }
+            }
+        }
+        stage (&apos;Run Import Commands&apos;) {
+            when {
+                expression {return &quot;${Workflow}&quot; == &quot;Export Resources from OCI (NonGreenfield Workflow)&quot;}
+            }
+            steps {
+                dir(&apos;/cd3user/oci_tools/cd3_automation_toolkit&apos;) {
+                    sh &apos;&apos;&apos;
+                       echo &quot;running import scripts&quot;
+                    &apos;&apos;&apos;
+                }
+                script {
+                    def data = readFile(file: &apos;/cd3user/oci_tools/cd3_automation_toolkit/updated_paths.safe&apos;)
+                    def lines = data.readLines()
+                    for (line in lines) {
+                        dir(line){
+                            def import_scripts = readFile(file: &apos;/cd3user/oci_tools/cd3_automation_toolkit/import_scripts.safe&apos;)
+                            def script_lines = import_scripts.readLines()
+                            for (script in script_lines) {
+                                if (fileExists(&quot;./${script}&quot;)) {
+                                    sh &quot;sh ./${script}&quot;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        stage (&apos;git commit&apos;) {
+            steps {
+                dir(&quot;/cd3user/tenancies/${customer_prefix}/terraform_files&quot;) {
+                    sh &apos;&apos;&apos;
+                        echo &quot;-----start timestamp-----&quot;
+                        time_stamp=&quot;$(date +%m-%d-%Y-%H-%M-%S)&quot;
+                        commit_msg=&quot;cd3 commit at ${time_stamp}&quot;
+                        git add .
+                        git commit -m &quot;${commit_msg}&quot;
+                        git push
+                    &apos;&apos;&apos;
+                }
+            }
+        }
+        stage (&apos;Stage terraform pipelines&apos;){
+            steps {
+                script {
+                    def jobs = []
+                    def data = readFile(file: &apos;/cd3user/oci_tools/cd3_automation_toolkit/updated_paths.safe&apos;)
+                    def lines = data.readLines()
+                    for (line in lines) {
+                        line = line.split(&apos;terraform_files/&apos;)[1]
+                        jobs.add(line)
+                    }
+                    print(jobs)
+                    parallelStagesMap = jobs.collectEntries {
+                        [&quot;${it}&quot; : generateStage(it)]
+                    }
+                }
+            }
+        }
+        stage(&apos;Execute terraform pipelines&apos;){
+            steps {
+                script{
+                    parallel parallelStagesMap
+                }
+            }
         }
 
     }
-
-}
-
-  }
 }
 </script>
     <sandbox>true</sandbox>

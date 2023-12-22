@@ -904,6 +904,7 @@ def export_dhcp(inputfile, outdir, service_dir, config, signer, ct, export_compa
                                    "w")
         importCommands[reg].write("#!/bin/bash")
         importCommands[reg].write("\n")
+        importCommands[reg].write("terraform init")
 
     print("Tab- DHCP would be overwritten during export process!!!")
     for reg in export_regions:
@@ -966,6 +967,7 @@ def export_subnets_vlans(inputfile, outdir, service_dir, config, signer, ct, exp
             outdir + "/" + reg + "/" + service_dir_network + "/tf_import_commands_network_subnets_nonGF.sh", "w")
         importCommands[reg].write("#!/bin/bash")
         importCommands[reg].write("\n")
+        importCommands[reg].write("terraform init")
 
         if (os.path.exists(outdir + "/" + reg + "/" + service_dir_vlan + "/tf_import_commands_network_vlans_nonGF.sh")):
             commonTools.backup_file(outdir + "/" + reg + "/" + service_dir_vlan, "tf_import_network",

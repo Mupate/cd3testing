@@ -1,13 +1,3 @@
-properties([
-        parameters([
-    string(
-                        defaultValue: '',
-                        name: 'Region',
-                        trim: true
-                )
-  ])
-])
-
 /* Set the various stages of the build */
 pipeline {
     agent any
@@ -21,11 +11,23 @@ pipeline {
 
             steps {
                 script {
-                    sh 'cd ${WORKSPACE}/${Region} && terraform init -upgrade'
+                    def jobName = env.JOB_NAME
+                    def parts = jobName.split('/')
+
+                    // Assuming the job name format is <region_name>/job/job_name
+                    def regionName = parts[1]
+                    echo "Region Name: ${regionName}"
+
+
+                    // Set environment variables for reuse in subsequent stages
+                    env.Region = regionName
+                    dir("${WORKSPACE}/${env.Region}") {
+                            sh 'terraform init -upgrade'
+                    }
 
                     // Run Terraform plan and capture the output
-                    def terraformPlanOutput = sh(script: 'cd ${WORKSPACE}/${Region} && terraform plan -out=tfplan.o
-ut', returnStdout: true).trim()
+                    def terraformPlanOutput = sh(script: "cd \"${WORKSPACE}/${env.Region}\" && terraform plan -
+out=tfplan.out", returnStdout: true).trim()
 
                     // Check if the plan contains any changes
                     if (terraformPlanOutput.contains('No changes.')) {
@@ -60,17 +62,21 @@ stage('OPA') {
             }
 
             // Run Terraform show and capture the output
-            sh 'cd ${WORKSPACE}/${Region} && terraform show -json tfplan.out > tfplan.json'
+            sh "cd \"${WORKSPACE}/${env.Region}\" && terraform show -json tfplan.out > tfplan.json'
 
             // Run OPA eval
-            def opaOutput = sh(
-                script: 'opa eval -f pretty -b /cd3user/oci_tools/cd3_automation_toolkit/user-scripts/OPA/ -i ${WORKSPACE}/${R
-egion}/tfplan.json data.terraform.deny',returnStdout: true).trim()
+            def opaOutput = sh(script: "opa eval -f pretty -b /cd3user/oci_tools/cd3_automation_toolkit/user-scripts/OPA/ -i \
+"${WORKSPACE}/${env.Region}/tfplan.json\" data.terraform.deny", returnStdout: true).trim()    
+
+
             if (opaOutput == '[]') {
                      echo "No OPA rules are violated. Proceeding with the next stage."
             } else {
                      echo "OPA rules are violated."
                      echo "OPA Output:\n${opaOutput}"
+
+                     input message: "Do you want to override OPA violations ?"
+                     echo "Approval for OPA violations Granted!"
 
                      //error('OPA rules are violated. Build failed.')
             }
@@ -124,7 +130,7 @@ egion}/tfplan.json data.terraform.deny',returnStdout: true).trim()
                       return
                     }
 
-                    sh 'cd ${WORKSPACE}/${Region} && terraform apply --auto-approve tfplan.out'
+                    sh "cd \"${WORKSPACE}/${env.Region}\" && terraform apply --auto-approve tfplan.out'
                 }
             }
         }

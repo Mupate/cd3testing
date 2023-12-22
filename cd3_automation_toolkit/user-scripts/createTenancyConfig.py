@@ -234,7 +234,7 @@ def create_bucket(config, signer):
         #print("\nCreating bucket " + bucket_name + " under root compartment in " + bucket_region+" for remote state...")
         create_bucket_response = buckets_client.create_bucket(
         namespace_name=namespace,
-        create_bucket_details=oci.object_storage.models.CreateBucketDetails(name=bucket_name,compartment_id=compartment_ocid))
+        create_bucket_details=oci.object_storage.models.CreateBucketDetails(name=bucket_name,compartment_id=compartment_ocid,versioning='Enabled'))
     return bucket_region,bucket_name
 
 

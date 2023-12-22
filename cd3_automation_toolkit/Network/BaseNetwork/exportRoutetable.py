@@ -193,6 +193,8 @@ def export_drg_routetable(inputfile, outdir, service_dir,config1,signer1, ct, ex
                                         "tf_import_commands_network_drg_routerules_nonGF.sh")
             importCommands_drg[reg] = open(outdir + "/" + reg + "/" + service_dir+ "/tf_import_commands_network_drg_routerules_nonGF.sh", "w")
             importCommands_drg[reg].write("#!/bin/bash")
+            importCommands[reg].write("\n")
+            importCommands[reg].write("terraform init")
             importCommands_drg[reg].write("\n\n######### Writing import for DRG Route Tables #########\n\n")
 
     for reg in export_regions:
@@ -288,6 +290,8 @@ def export_routetable(inputfile, outdir, service_dir,config1,signer1, ct, export
                                         "tf_import_commands_network_routerules_nonGF.sh")
             importCommands[reg] = open(outdir + "/" + reg + "/" + service_dir+ "/tf_import_commands_network_routerules_nonGF.sh", "a")
             importCommands[reg].write("#!/bin/bash")
+            importCommands[reg].write("\n")
+            importCommands[reg].write("terraform init")
             importCommands[reg].write("\n\n######### Writing import for Route Tables #########\n\n")
 
     for reg in export_regions:

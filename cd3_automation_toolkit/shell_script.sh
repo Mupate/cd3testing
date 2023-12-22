@@ -17,7 +17,7 @@ source /cd3user/.bashrc
 python -m pip install --user --upgrade pip
 #non needed
 #python -m pip install --user oci==2.110.1
-python -m pip install --user oci-cli==3.31.0
+python -m pip install --user oci-cli==3.37.0
 python -m pip install --user pycryptodomex==3.10.1
 python -m pip install --user regex==2022.10.31
 python -m pip install --user pandas==1.1.5

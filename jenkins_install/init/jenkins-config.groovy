@@ -22,8 +22,8 @@ file.withReader { reader ->
         }
       }
     }
-def tfApplyJobName = "Terraform-Plan-OPA-Apply"
-def tfDestroyJobName = "Terraform-Destroy"
+def tfApplyJobName = "terraform-apply"
+def tfDestroyJobName = "terraform-destroy"
 
 for (os in outdir_structure) {
         def ost = jenkins.getItem("terraform_files")
@@ -41,18 +41,6 @@ for (os in outdir_structure) {
         <actions/>
         <description/>
         <keepDependencies>false</keepDependencies>
-        <properties>
-                <hudson.model.ParametersDefinitionProperty>
-                        <parameterDefinitions>
-                                <hudson.model.StringParameterDefinition>
-                                        <name>Region</name>
-                                        <defaultValue>${reg}</defaultValue>
-                                        <description>Tenancy region where resource are to be deployed. Required for both single and multiple out directory structure</description>
-                                </hudson.model.StringParameterDefinition>
-                        </parameterDefinitions>
-                </hudson.model.ParametersDefinitionProperty>
-        </properties>
-        <triggers/>
         <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition">
                 <scriptPath>singleOutput.groovy</scriptPath>
                 <lightweight>false</lightweight>
@@ -81,18 +69,6 @@ for (os in outdir_structure) {
         <actions/>
         <description/>
         <keepDependencies>false</keepDependencies>
-        <properties>
-                <hudson.model.ParametersDefinitionProperty>
-                        <parameterDefinitions>
-                                <hudson.model.StringParameterDefinition>
-                                        <name>Region</name>
-                                        <defaultValue>${reg}</defaultValue>
-                                        <description>Tenancy region where resource are to be deployed. Required for both single and multiple out directory structure</description>
-                                </hudson.model.StringParameterDefinition>
-                        </parameterDefinitions>
-                </hudson.model.ParametersDefinitionProperty>
-        </properties>
-        <triggers/>
         <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition">
                 <scriptPath>singleOutput-tf-destroy.groovy</scriptPath>
                 <lightweight>false</lightweight>
@@ -132,27 +108,6 @@ for (os in outdir_structure) {
         <actions/>
         <description/>
         <keepDependencies>false</keepDependencies>
-        <properties>
-                <com.sonyericsson.rebuild.RebuildSettings plugin="rebuild@320.v5a_0933a_e7d61">
-                        <autoRebuild>true</autoRebuild>
-                        <rebuildDisabled>false</rebuildDisabled>
-                </com.sonyericsson.rebuild.RebuildSettings>
-                <hudson.model.ParametersDefinitionProperty>
-                        <parameterDefinitions>
-                                <hudson.model.StringParameterDefinition>
-                                        <name>Region</name>
-                                        <defaultValue>${reg}</defaultValue>
-                                        <description>Tenancy region where resource are to be deployed. Required for both single and multiple out directory structure</description>
-                                </hudson.model.StringParameterDefinition>
-                                <hudson.model.StringParameterDefinition>
-                                        <name>Service</name>
-                                        <defaultValue>${svc}</defaultValue>
-                                        <description>Service to be deployed incase of multiple outdirectory structure</description>
-                                </hudson.model.StringParameterDefinition>
-                        </parameterDefinitions>
-                </hudson.model.ParametersDefinitionProperty>
-        </properties>
-        <triggers/>
         <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition">
                 <scriptPath>multiOutput.groovy</scriptPath>
                 <lightweight>false</lightweight>
@@ -181,27 +136,6 @@ for (os in outdir_structure) {
         <actions/>
         <description/>
         <keepDependencies>false</keepDependencies>
-        <properties>
-                <com.sonyericsson.rebuild.RebuildSettings plugin="rebuild@320.v5a_0933a_e7d61">
-                        <autoRebuild>true</autoRebuild>
-                        <rebuildDisabled>false</rebuildDisabled>
-                </com.sonyericsson.rebuild.RebuildSettings>
-                <hudson.model.ParametersDefinitionProperty>
-                        <parameterDefinitions>
-                                <hudson.model.StringParameterDefinition>
-                                        <name>Region</name>
-                                        <defaultValue>${reg}</defaultValue>
-                                        <description>Tenancy region where resource are to be deployed. Required for both single and multiple out directory structure</description>
-                                </hudson.model.StringParameterDefinition>
-                                <hudson.model.StringParameterDefinition>
-                                        <name>Service</name>
-                                        <defaultValue>${svc}</defaultValue>
-                                        <description>Service to be deployed incase of multiple outdirectory structure</description>
-                                </hudson.model.StringParameterDefinition>
-                        </parameterDefinitions>
-                </hudson.model.ParametersDefinitionProperty>
-        </properties>
-        <triggers/>
         <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition">
                 <scriptPath>multiOutput-tf-destroy.groovy</scriptPath>
                 <lightweight>false</lightweight>

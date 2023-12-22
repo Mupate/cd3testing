@@ -1,19 +1,3 @@
-properties([
-    parameters([
-        string(
-            defaultValue: '',
-            name: 'Region',
-            trim: true
-        ),
-        string(
-            defaultValue: '',
-            name: 'Service',
-            trim: true,
-        )
-    ])
-])
-
-/* Set the various stages of the build */
 pipeline {
     agent any
     stages {
@@ -26,10 +10,26 @@ pipeline {
 
             steps {
                 script {
-                    sh 'cd ${WORKSPACE}/${Region}/${Service} && terraform init -upgrade'
+                    def jobName = env.JOB_NAME
+                    def parts = jobName.split('/')
+
+                    // Assuming the job name format is <region_name>/job/<service_name>/job/job_name
+                    def regionName = parts[1]
+                    def serviceName = parts[2]
+
+                    echo "Region Name: ${regionName}"
+                    echo "Service Name: ${serviceName}"
+
+                    // Set environment variables for reuse in subsequent stages
+                    env.Region = regionName
+                    env.Service = serviceName
+
+                    dir("${WORKSPACE}/${env.Region}/${env.Service}") {
+                            sh 'terraform init -upgrade'
+                    }                    
 
                     // Run Terraform plan and capture the output
-                    def terraformPlanOutput = sh(script: 'cd ${WORKSPACE}/${Region}/${Service} && terraform plan -out=tfplan.out', returnStdout: true).trim()
+                    def terraformPlanOutput = sh(script: "cd \"${WORKSPACE}/${env.Region}/${env.Service}\" && terraform plan -out=tfplan.out", returnStdout: true).trim()
 
                     // Check if the plan contains any changes
                     if (terraformPlanOutput.contains('No changes.')) {
@@ -64,20 +64,20 @@ stage('OPA') {
             }
 
             // Run Terraform show and capture the output
-            sh 'cd ${WORKSPACE}/${Region}/${Service} && terraform show -json tfplan.out > tfplan.json'
+            sh "cd \"${WORKSPACE}/${env.Region}/${env.Service}\" && terraform show -json tfplan.out > tfplan.json"
 
             // Run OPA eval
-            def opaOutput = sh(
-                script: 'opa eval -f pretty -b /cd3user/oci_tools/cd3_automation_toolkit/user-scripts/OPA/ -i ${WORKSPACE}/${Region}/${Service}/tfplan.json data.terraform.deny',
-                returnStdout: true
-            ).trim()
+            def opaOutput = sh(script: "opa eval -f pretty -b /cd3user/oci_tools/cd3_automation_toolkit/user-scripts/OPA/ -i \"${WORKSPACE}/${env.Region}/${env.Service}/tfplan.json\" data.terraform.deny",
+    returnStdout: true).trim()
 
- 
             if (opaOutput == '[]') {
                      echo "No OPA rules are violated. Proceeding with the next stage."
             } else {
                      echo "OPA rules are violated."
                      echo "OPA Output:\n${opaOutput}"
+                     
+		     input message: "Do you want to override OPA violations ?"
+		     echo "Approval for OPA violations Granted!"
 
                      //error('OPA rules are violated. Build failed.')
             }
@@ -131,7 +131,7 @@ stage('OPA') {
                       return
                     }
 
-                    sh 'cd ${WORKSPACE}/${Region}/${Service} && terraform apply --auto-approve tfplan.out'
+                    sh "cd \"${WORKSPACE}/${env.Region}/${env.Service}\" && terraform apply --auto-approve tfplan.out"
                 }
             }
         }

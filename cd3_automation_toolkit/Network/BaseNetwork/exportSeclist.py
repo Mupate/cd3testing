@@ -239,6 +239,8 @@ def export_seclist(inputfile, outdir, service_dir,config,signer, ct, export_comp
                                         "tf_import_commands_network_secrules_nonGF.sh")
             importCommands[reg] = open(outdir + "/" + reg + "/" + service_dir+ "/tf_import_commands_network_secrules_nonGF.sh", "w")
             importCommands[reg].write("#!/bin/bash")
+            importCommands[reg].write("\n")
+            importCommands[reg].write("terraform init")
             importCommands[reg].write("\n\n######### Writing import for Security Lists #########\n\n")
 
 
