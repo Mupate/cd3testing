@@ -16,8 +16,6 @@ pipeline {
 
                     // Assuming the job name format is <region_name>/job/job_name
                     def regionName = parts[1]
-                    echo "Region Name: ${regionName}"
-
 
                     // Set environment variables for reuse in subsequent stages
                     env.Region = regionName

@@ -21,7 +21,6 @@ import time, glob, os
 def show_options(options, quit=False, menu=False, extra=None, index=0):
     # Just add whitespace between number and option. It just makes it look better
     number_offset = len(str(len(options))) + 1
-
     # Iterate over options. Print number and option
     for i, option in enumerate(options, index):
         print(f'{str(i)+".":<{number_offset}} {option.name}')
@@ -31,7 +30,6 @@ def show_options(options, quit=False, menu=False, extra=None, index=0):
         print(f'{"m"+".":<{number_offset}} Press m to go back to Main Menu')
     if extra:
         print(extra)
-
     user_input = input('Enter your choice (specify comma separated to choose multiple choices): ')
     user_input = user_input.split(',')
     if 'q' in user_input or 'm' in user_input:
@@ -47,7 +45,6 @@ def show_options(options, quit=False, menu=False, extra=None, index=0):
         print("\nInvalid Input.....Try again!!\n")
         options = show_options(inputs, quit=True, index=index)
         return options
-
 
 
 def execute_options(options, *args, **kwargs):
@@ -89,6 +86,21 @@ def get_region_list(rm):
         if rm == True:
             region_list_fetch.append('global')
     return region_list_fetch
+
+def update_path_list(regions_path=[],service_dirs=[]):
+    # Update modified path list
+    for current_dir in service_dirs:
+        for reg in regions_path:
+            path_value = ((outdir + "/" + reg + "/" + current_dir).rstrip('/')).replace("//","/")
+            items = glob.glob(path_value + "/*")
+            files = [f for f in items if
+                     (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
+            if files:
+                if path_value not in updated_paths:
+                    updated_paths.append(path_value)
+                for script_file in files:
+                    if script_file.endswith(".sh") and script_file not in import_scripts:
+                        import_scripts.append(script_file)
 
 
 def fetch_compartments(outdir, outdir_struct, ct):
@@ -193,24 +205,7 @@ def export_identityOptions(options=[]):
             export_networkSources(inputfile, outdir, service_dir_identity, config,signer, ct)
             service_dirs = [service_dir_identity]
     # Update modified path list
-    for current_dir in service_dirs:
-        print("#########################")
-        print("current dir is : "+current_dir)
-        path_value = (outdir + "/" + ct.home_region + "/" + current_dir).rstrip('/')
-        items = glob.glob(path_value + "/*")
-        print("printing items in "+path_value)
-        print(items)
-        files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-        print(files)
-        if files:
-            if path_value not in updated_paths:
-                updated_paths.append(path_value)
-                print("added path as : "+path_value)
-            for script_file in files:
-                if script_file.endswith(".sh") and script_file not in import_scripts:
-                    print(script_file)
-                    import_scripts.append(script_file)
-        print("#########################")
+    update_path_list(regions_path=[ct.home_region], service_dirs=service_dirs)
 
 
 def export_compartmentPoliciesGroups(inputfile, outdir, service_dir, config, signer, ct):
@@ -239,15 +234,7 @@ def export_tags(options=[]):
     create_tags()
     print("\n\nExecute tf_import_commands_tags_nonGF.sh script created under home region directory to synch TF with OCI Tags\n")
     # Update modified path list
-    path_value = (outdir + "/" + ct.home_region + "/" + service_dir_tagging).rstrip('/')
-    items = glob.glob(path_value + "/*")
-    files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-    if files:
-        if path_value not in updated_paths:
-            updated_paths.append(path_value)
-        for script_file in files:
-            if script_file.endswith(".sh") and script_file not in import_scripts:
-                import_scripts.append(script_file)
+    update_path_list(regions_path=[ct.home_region], service_dirs=[service_dir_tagging])
 
 
 def export_network(options=[]):
@@ -279,17 +266,7 @@ def export_network(options=[]):
     print("NOTE: Make sure to execute tf_import_commands_network_major-objects_nonGF.sh before executing the other scripts.")
     print("=====================================================================================================================")
     # Update modified path list
-    for current_dir in service_dirs:
-        for reg in export_regions:
-            path_value = (outdir + "/" + reg + "/" + current_dir).rstrip('/')
-            items = glob.glob(path_value + "/*")
-            files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-            if files:
-                if path_value not in updated_paths:
-                    updated_paths.append(path_value)
-                for script_file in files:
-                    if script_file.endswith(".sh") and script_file not in import_scripts:
-                        import_scripts.append(script_file)
+    update_path_list(regions_path=export_regions, service_dirs=service_dirs)
 
 
 def export_networking(inputfile, outdir, service_dir,config, signer, ct, export_regions):
@@ -371,16 +348,7 @@ def export_dedicatedvmhosts(inputfile, outdir, config, signer, ct, export_region
     create_dedicatedvmhosts(inputfile, outdir, service_dir_dedicated_vm_host, prefix, ct)
     print("\n\nExecute tf_import_commands_dedicatedvmhosts_nonGF.sh script created under each region directory to synch TF with OCI Dedicated VM Hosts\n")
     # Update modified path list
-    for reg in export_regions:
-        path_value = (outdir + "/" + reg + "/" + service_dir_dedicated_vm_host).rstrip('/')
-        items = glob.glob(path_value + "/*")
-        files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-        if files:
-            if path_value not in updated_paths:
-                updated_paths.append(path_value)
-            for script_file in files:
-                if script_file.endswith(".sh") and script_file not in import_scripts:
-                    import_scripts.append(script_file)
+    update_path_list(regions_path=export_regions, service_dirs=[service_dir_dedicated_vm_host])
 
 
 def export_instances(inputfile, outdir,config,signer, ct, export_regions):
@@ -393,16 +361,7 @@ def export_instances(inputfile, outdir,config,signer, ct, export_regions):
     create_instances(inputfile, outdir, service_dir_instance,prefix, ct)
     print("\n\nExecute tf_import_commands_instances_nonGF.sh script created under each region directory to synch TF with OCI Instances\n")
     # Update modified path list
-    for reg in export_regions:
-        path_value = (outdir + "/" + reg + "/" + service_dir_instance).rstrip('/')
-        items = glob.glob(path_value + "/*")
-        files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-        if files:
-            if path_value not in updated_paths:
-                updated_paths.append(path_value)
-            for script_file in files:
-                if script_file.endswith(".sh") and script_file not in import_scripts:
-                    import_scripts.append(script_file)
+    update_path_list(regions_path=export_regions, service_dirs=[service_dir_instance])
 
 
 def export_storage(options=[]):
@@ -425,16 +384,7 @@ def export_block_volumes(inputfile, outdir,config,signer,ct, export_regions):
     Storage.create_terraform_block_volumes(inputfile, outdir, service_dir_block_volume, prefix, ct)
     print("\n\nExecute tf_import_commands_blockvolumes_nonGF.sh script created under each region directory to synch TF with OCI Block Volume Objects\n")
     # Update modified path list
-    for reg in export_regions:
-        path_value = (outdir + "/" + reg + "/" + service_dir_block_volume).rstrip('/')
-        items = glob.glob(path_value + "/*")
-        files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-        if files:
-            if path_value not in updated_paths:
-                updated_paths.append(path_value)
-            for script_file in files:
-                if script_file.endswith(".sh") and script_file not in import_scripts:
-                    import_scripts.append(script_file)
+    update_path_list(regions_path=export_regions, service_dirs=[service_dir_block_volume])
 
 
 def export_fss(inputfile, outdir,config, signer, ct, export_regions):
@@ -443,16 +393,7 @@ def export_fss(inputfile, outdir,config, signer, ct, export_regions):
     Storage.create_terraform_fss(inputfile, outdir, service_dir_fss, prefix, ct)
     print("\n\nExecute tf_import_commands_fss_nonGF.sh script created under each region directory to synch TF with OCI FSS objects\n")
     # Update modified path list
-    for reg in export_regions:
-        path_value = (outdir + "/" + reg + "/" + service_dir_fss).rstrip('/')
-        items = glob.glob(path_value + "/*")
-        files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-        if files:
-            if path_value not in updated_paths:
-                updated_paths.append(path_value)
-            for script_file in files:
-                if script_file.endswith(".sh") and script_file not in import_scripts:
-                    import_scripts.append(script_file)
+    update_path_list(regions_path=export_regions, service_dirs=[service_dir_fss])
 
 
 def export_buckets(inputfile, outdir, config, signer, ct, export_regions):
@@ -461,16 +402,7 @@ def export_buckets(inputfile, outdir, config, signer, ct, export_regions):
     Storage.create_terraform_oss(inputfile, outdir, service_dir_object_storage, prefix, ct)
     print("\n\nExecute tf_import_commands_buckets_nonGF.sh script created under each region directory to synch TF with OCI Object Storage Buckets\n")
     # Update modified path list
-    for reg in export_regions:
-        path_value = (outdir + "/" + reg + "/" + service_dir_object_storage).rstrip('/')
-        items = glob.glob(path_value + "/*")
-        files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-        if files:
-            if path_value not in updated_paths:
-                updated_paths.append(path_value)
-            for script_file in files:
-                if script_file.endswith(".sh") and script_file not in import_scripts:
-                    import_scripts.append(script_file)
+    update_path_list(regions_path=export_regions, service_dirs=[service_dir_object_storage])
 
 
 def export_loadbalancer(options=[]):
@@ -487,16 +419,7 @@ def export_lbr(inputfile, outdir,config, signer, ct, export_regions):
     create_lb(inputfile, outdir,service_dir_loadbalancer, prefix, ct)
     print("\n\nExecute tf_import_commands_lbr_nonGF.sh script created under each region directory to synch TF with OCI LBR objects\n")
     # Update modified path list
-    for reg in export_regions:
-        path_value = (outdir + "/" + reg + "/" + service_dir_loadbalancer).rstrip('/')
-        items = glob.glob(path_value + "/*")
-        files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-        if files:
-            if path_value not in updated_paths:
-                updated_paths.append(path_value)
-            for script_file in files:
-                if script_file.endswith(".sh") and script_file not in import_scripts:
-                    import_scripts.append(script_file)
+    update_path_list(regions_path=export_regions, service_dirs=[service_dir_loadbalancer])
 
 
 def export_nlb(inputfile, outdir,config,signer, ct, export_regions):
@@ -505,16 +428,7 @@ def export_nlb(inputfile, outdir,config,signer, ct, export_regions):
     create_nlb(inputfile, outdir,service_dir_networkloadbalancer, prefix, ct)
     print("\n\nExecute tf_import_commands_nlb_nonGF.sh script created under each region directory to synch TF with OCI NLB objects\n")
     # Update modified path list
-    for reg in export_regions:
-        path_value = (outdir + "/" + reg + "/" + service_dir_networkloadbalancer).rstrip('/')
-        items = glob.glob(path_value + "/*")
-        files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-        if files:
-            if path_value not in updated_paths:
-                updated_paths.append(path_value)
-            for script_file in files:
-                if script_file.endswith(".sh") and script_file not in import_scripts:
-                    import_scripts.append(script_file)
+    update_path_list(regions_path=export_regions, service_dirs=[service_dir_networkloadbalancer])
 
 
 def export_databases(options=[]):
@@ -533,16 +447,7 @@ def export_dbsystems_vm_bm(inputfile, outdir,config,signer, ct,export_regions):
     Database.create_terraform_dbsystems_vm_bm(inputfile, outdir, service_dir_dbsystem_vm_bm, prefix, ct)
     print("\n\nExecute tf_import_commands_dbsystems-vm-bm_nonGF.sh script created under each region directory to synch TF with DBSystems\n")
     # Update modified path list
-    for reg in export_regions:
-        path_value = (outdir + "/" + reg + "/" + service_dir_dbsystem_vm_bm).rstrip('/')
-        items = glob.glob(path_value + "/*")
-        files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-        if files:
-            if path_value not in updated_paths:
-                updated_paths.append(path_value)
-            for script_file in files:
-                if script_file.endswith(".sh") and script_file not in import_scripts:
-                    import_scripts.append(script_file)
+    update_path_list(regions_path=export_regions, service_dirs=[service_dir_dbsystem_vm_bm])
 
 
 def export_exa_infra_vmclusters(inputfile, outdir,config, signer, ct, export_regions):
@@ -552,16 +457,7 @@ def export_exa_infra_vmclusters(inputfile, outdir,config, signer, ct, export_reg
     create_exa_infra_vmclusters(inputfile, outdir, service_dir_database_exacs, prefix,ct)
     print("\n\nExecute tf_import_commands_exa-infra_nonGF.sh and tf_import_commands_exa-vmclusters_nonGF.sh scripts created under each region directory to synch TF with Exa-Infra and Exa-VMClusters\n")
     # Update modified path list
-    for reg in export_regions:
-        path_value = (outdir + "/" + reg + "/" + service_dir_database_exacs).rstrip('/')
-        items = glob.glob(path_value + "/*")
-        files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-        if files:
-            if path_value not in updated_paths:
-                updated_paths.append(path_value)
-            for script_file in files:
-                if script_file.endswith(".sh") and script_file not in import_scripts:
-                    import_scripts.append(script_file)
+    update_path_list(regions_path=export_regions, service_dirs=[service_dir_database_exacs])
 
 
 def export_adbs(inputfile, outdir,config, signer, ct, export_regions):
@@ -570,16 +466,7 @@ def export_adbs(inputfile, outdir,config, signer, ct, export_regions):
     Database.create_terraform_adb(inputfile, outdir, service_dir_adb, prefix, ct)
     print("\n\nExecute tf_import_commands_adb_nonGF.sh script created under each region directory to synch TF with OCI ADBs\n")
     # Update modified path list
-    for reg in export_regions:
-        path_value = (outdir + "/" + reg + "/" + service_dir_adb).rstrip('/')
-        items = glob.glob(path_value + "/*")
-        files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-        if files:
-            if path_value not in updated_paths:
-                updated_paths.append(path_value)
-            for script_file in files:
-                if script_file.endswith(".sh") and script_file not in import_scripts:
-                    import_scripts.append(script_file)
+    update_path_list(regions_path=export_regions, service_dirs=[service_dir_adb])
 
 
 def export_management_services(options=[]):
@@ -598,17 +485,7 @@ def export_management_services(options=[]):
             export_service_connectors(inputfile, outdir, service_dir_managementservices, config, signer, ct, export_regions)
             service_dirs = [service_dir_managementservices]
     # Update modified path list
-    if service_dirs:
-        for reg in export_regions:
-            path_value = (outdir + "/" + reg + "/" + service_dir_managementservices).rstrip('/')
-            items = glob.glob(path_value + "/*")
-            files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-            if files:
-                if path_value not in updated_paths:
-                    updated_paths.append(path_value)
-                for script_file in files:
-                    if script_file.endswith(".sh") and script_file not in import_scripts:
-                        import_scripts.append(script_file)
+    update_path_list(regions_path=export_regions, service_dirs=[service_dir_managementservices])
 
 
 def export_notifications(inputfile, outdir, service_dir, config, signer, ct, export_regions):
@@ -651,16 +528,7 @@ def export_oke(inputfile, outdir, config,signer, ct, export_regions):
     DeveloperServices.create_terraform_oke(inputfile, outdir, service_dir_oke,prefix, ct)
     print("\n\nExecute tf_import_commands_oke_nonGF.sh script created under each region directory to synch TF with OKE\n")
     # Update modified path list
-    for reg in export_regions:
-        path_value = (outdir + "/" + reg + "/" + service_dir_oke).rstrip('/')
-        items = glob.glob(path_value + "/*")
-        files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-        if files:
-            if path_value not in updated_paths:
-                updated_paths.append(path_value)
-            for script_file in files:
-                if script_file.endswith(".sh") and script_file not in import_scripts:
-                    import_scripts.append(script_file)
+    update_path_list(regions_path=export_regions, service_dirs=[service_dir_oke])
 
 
 def export_sddc():
@@ -669,17 +537,7 @@ def export_sddc():
     SDDC.create_terraform_sddc(inputfile, outdir, service_dir_sddc, prefix, ct)
     print("\n\nExecute tf_import_commands_sddcs_nonGF.sh script created under each region directory to synch TF with SDDC\n")
     # Update modified path list
-    # Update modified path list
-    for reg in export_regions:
-        path_value = (outdir + "/" + reg + "/" + service_dir_sddc).rstrip('/')
-        items = glob.glob(path_value + "/*")
-        files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-        if files:
-            if path_value not in updated_paths:
-                updated_paths.append(path_value)
-            for script_file in files:
-                if script_file.endswith(".sh") and script_file not in import_scripts:
-                    import_scripts.append(script_file)
+    update_path_list(regions_path=export_regions, service_dirs=[service_dir_sddc])
 
 
 def export_dns(options=[]):
@@ -692,17 +550,7 @@ def export_dns(options=[]):
             export_dns_resolvers(inputfile, outdir, service_dir_dns, config, signer, ct, export_regions)
             service_dirs = [service_dir_dns]
     # Update modified path list
-    for current_dir in service_dirs:
-        for reg in export_regions:
-            path_value = (outdir + "/" + reg + "/" + current_dir).rstrip('/')
-            items = glob.glob(path_value + "/*")
-            files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-            if files:
-                if path_value not in updated_paths:
-                    updated_paths.append(path_value)
-                for script_file in files:
-                    if script_file.endswith(".sh") and script_file not in import_scripts:
-                        import_scripts.append(script_file)
+    update_path_list(regions_path=export_regions, service_dirs=service_dirs)
 
 
 def export_dns_views_zones_rrsets(inputfile, outdir, service_dir, config, signer, ct, export_regions):
@@ -755,24 +603,13 @@ def create_identity(options=[]):
             Identity.NetworkSources.create_terraform_networkSources(inputfile, outdir,service_dir_identity, prefix, ct)
             service_dirs = [service_dir_identity]
     # Update modified path list
-    if service_dirs:
-        path_value = (outdir + "/" + ct.home_region + "/" + service_dir_identity).rstrip('/')
-        items = glob.glob(path_value + "/*")
-        files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-        if files:
-            if path_value not in updated_paths:
-                updated_paths.append(path_value)
+    update_path_list(regions_path=[ct.home_region], service_dirs=[service_dir_identity])
 
 
 def create_tags():
     Governance.create_terraform_tags(inputfile, outdir, service_dir_tagging, prefix, ct)
     # Update modified path list
-    path_value = (outdir + "/" + ct.home_region + "/" + service_dir_tagging).rstrip('/')
-    items = glob.glob(path_value + "/*")
-    files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-    if files:
-        if path_value not in updated_paths:
-            updated_paths.append(path_value)
+    update_path_list(regions_path=[ct.home_region], service_dirs=[service_dir_tagging])
 
 
 def create_network(options=[], sub_options=[]):
@@ -803,16 +640,9 @@ def create_network(options=[], sub_options=[]):
         if opt == 'Customer Connectivity':
             create_drg_connectivity(inputfile, outdir, service_dir_network, prefix, ct, non_gf_tenancy=non_gf_tenancy)
             service_dirs.append(service_dir_network) if service_dir_network not in service_dirs else service_dirs
-
     # Update modified path list
-    for current_dir in service_dirs:
-        for reg in subscribed_regions:
-            path_value = (outdir + "/" + reg + "/" + current_dir).rstrip('/')
-            items = glob.glob(path_value + "/*")
-            files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-            if files:
-                if path_value not in updated_paths:
-                    updated_paths.append(path_value)
+    update_path_list(regions_path=subscribed_regions, service_dirs=service_dirs)
+
 
 def modify_terraform_network(inputfile, outdir, service_dir,  prefix, ct, non_gf_tenancy):
     Network.create_all_tf_objects(inputfile, outdir, service_dir, prefix, ct, non_gf_tenancy=non_gf_tenancy,  modify_network=True, )
@@ -890,14 +720,7 @@ def create_compute(options=[]):
             create_instances(inputfile, outdir, service_dir_instance,prefix, ct)
             service_dirs.append(service_dir_instance) if service_dir_instance not in service_dirs else service_dirs
     # Update modified path list
-    for current_dir in service_dirs:
-        for reg in subscribed_regions:
-            path_value = (outdir + "/" + reg + "/" + current_dir).rstrip('/')
-            items = glob.glob(path_value + "/*")
-            files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-            if files:
-                if path_value not in updated_paths:
-                    updated_paths.append(path_value)
+    update_path_list(regions_path=subscribed_regions, service_dirs=service_dirs)
 
 
 def create_instances(inputfile, outdir, service_dir,prefix,ct):
@@ -922,14 +745,8 @@ def create_storage(options=[]):
             service_dirs.append(service_dir_object_storage) if service_dir_object_storage not in service_dirs else service_dirs
         #Option('Enable Object Storage Buckets Write Logs', create_cis_oss_logs, '')
     # Update modified path list
-    for current_dir in service_dirs:
-        for reg in subscribed_regions:
-            path_value = (outdir + "/" + reg + "/" + current_dir).rstrip('/')
-            items = glob.glob(path_value + "/*")
-            files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-            if files:
-                if path_value not in updated_paths:
-                    updated_paths.append(path_value)
+    update_path_list(regions_path=subscribed_regions, service_dirs=service_dirs)
+
 
 def create_loadbalancer(options=[]):
     service_dirs = []
@@ -942,14 +759,7 @@ def create_loadbalancer(options=[]):
             service_dirs.append(service_dir_networkloadbalancer) if service_dir_networkloadbalancer not in service_dirs else service_dirs
         #Option('Enable LBaaS Logs', enable_lb_logs, 'LBaaS Logs')
     # Update modified path list
-    for current_dir in service_dirs:
-        for reg in subscribed_regions:
-            path_value = (outdir + "/" + reg + "/" + current_dir).rstrip('/')
-            items = glob.glob(path_value + "/*")
-            files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-            if files:
-                if path_value not in updated_paths:
-                    updated_paths.append(path_value)
+    update_path_list(regions_path=subscribed_regions, service_dirs=service_dirs)
 
 
 def create_lb(inputfile, outdir,service_dir, prefix, ct):
@@ -978,14 +788,7 @@ def create_databases(options=[]):
             Database.create_terraform_adb(inputfile, outdir, service_dir_adb, prefix, ct)
             service_dirs.append(service_dir_adb) if service_dir_adb not in service_dirs else service_dirs
     # Update modified path list
-    for current_dir in service_dirs:
-        for reg in subscribed_regions:
-            path_value = (outdir + "/" + reg + "/" + current_dir).rstrip('/')
-            items = glob.glob(path_value + "/*")
-            files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-            if files:
-                if path_value not in updated_paths:
-                    updated_paths.append(path_value)
+    update_path_list(regions_path=subscribed_regions, service_dirs=service_dirs)
 
 
 def create_exa_infra_vmclusters(inputfile, outdir,service_dir, prefix,ct):
@@ -1009,15 +812,7 @@ def create_management_services(options=[]):
             service_dirs = [service_dir_managementservices]
 
     # Update modified path list
-    if service_dirs:
-        for reg in subscribed_regions:
-            path_value = (outdir + "/" + reg + "/" + service_dir_managementservices).rstrip('/')
-            items = glob.glob(path_value + "/*")
-            files = [f for f in items if
-                     (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-            if files:
-                if path_value not in updated_paths:
-                    updated_paths.append(path_value)
+    update_path_list(regions_path=subscribed_regions, service_dirs=[service_dir_managementservices])
 
 
 def create_developer_services(options=[]):
@@ -1035,25 +830,13 @@ def create_rm_stack(inputfile, outdir, prefix, auth_mechanism, config_file, ct):
 def create_oke(inputfile, outdir, prefix, auth_mechanism, config_file, ct):
     DeveloperServices.create_terraform_oke(inputfile, outdir, service_dir_oke, prefix, ct)
     # Update modified path list
-    for reg in subscribed_regions:
-        path_value = (outdir + "/" + reg + "/" + service_dir_oke).rstrip('/')
-        items = glob.glob(path_value + "/*")
-        files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-        if files:
-            if path_value not in updated_paths:
-                updated_paths.append(path_value)
+    update_path_list(regions_path=subscribed_regions, service_dirs=[service_dir_oke])
 
 
 def create_sddc():
     SDDC.create_terraform_sddc(inputfile, outdir, service_dir_sddc, prefix, ct)
     # Update modified path list
-    for reg in subscribed_regions:
-        path_value = (outdir + "/" + reg + "/" + service_dir_sddc).rstrip('/')
-        items = glob.glob(path_value + "/*")
-        files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-        if files:
-            if path_value not in updated_paths:
-                updated_paths.append(path_value)
+    update_path_list(regions_path=subscribed_regions, service_dirs=[service_dir_sddc])
 
 
 def create_dns(options=[]):
@@ -1066,14 +849,7 @@ def create_dns(options=[]):
             Network.create_terraform_dns_resolvers(inputfile, outdir, service_dir_dns, prefix, ct)
             service_dirs = [service_dir_dns]
     # Update modified path list
-    if service_dirs:
-        for reg in subscribed_regions:
-            path_value = (outdir + "/" + reg + "/" + service_dir_dns).rstrip('/')
-            items = glob.glob(path_value + "/*")
-            files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-            if files:
-                if path_value not in updated_paths:
-                    updated_paths.append(path_value)
+    update_path_list(regions_path=subscribed_regions, service_dirs=service_dirs)
 
 
 def create_terraform_dns(inputfile, outdir, service_dir, prefix, ct):
@@ -1095,14 +871,8 @@ def create_logging(options=[]):
             service_dirs.append(service_dir_object_storage) if service_dir_object_storage not in service_dirs else service_dirs
 
     # Update modified path list
-    for current_dir in service_dirs:
-        for reg in subscribed_regions:
-            path_value = (outdir + "/" + reg + "/" + current_dir).rstrip('/')
-            items = glob.glob(path_value + "/*")
-            files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-            if files:
-                if path_value not in updated_paths:
-                    updated_paths.append(path_value)
+    update_path_list(regions_path=subscribed_regions, service_dirs=service_dirs)
+
 
 def create_cis_features(options=[], sub_options=[]):
     service_dirs = []
@@ -1124,6 +894,7 @@ def create_cis_features(options=[], sub_options=[]):
             service_dirs.append(service_dir) if service_dir not in service_dirs else service_dirs
 
     # Update modified path list
+    update_path_list(regions_path=[""], service_dirs=service_dirs)
     for current_dir in service_dirs:
         path_value = (outdir + "/" + current_dir).rstrip('/')
         items = glob.glob(path_value + "/*")
@@ -1391,6 +1162,5 @@ f.close()
 import_scripts_file = f'/cd3user/oci_tools/cd3_automation_toolkit/import_scripts.safe'
 with open(import_scripts_file, 'w+') as f:
     for item in import_scripts:
-        script = (str(item).replace('//','/')).split("/")[-1]+"\n"
-        f.write(script)
+        f.write(str(item).replace('//','/')+"\n")
 f.close()

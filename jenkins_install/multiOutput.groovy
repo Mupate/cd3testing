@@ -17,8 +17,6 @@ pipeline {
                     def regionName = parts[1]
                     def serviceName = parts[2]
 
-                    echo "Region Name: ${regionName}"
-                    echo "Service Name: ${serviceName}"
 
                     // Set environment variables for reuse in subsequent stages
                     env.Region = regionName

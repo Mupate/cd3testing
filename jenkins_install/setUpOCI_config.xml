@@ -339,17 +339,14 @@ pipeline {
                     &apos;&apos;&apos;
                 }
                 script {
-                    def data = readFile(file: &apos;/cd3user/oci_tools/cd3_automation_toolkit/updated_paths.safe&apos;)
+                    def data = readFile(file: &apos;/cd3user/oci_tools/cd3_automation_toolkit/import_scripts.safe&apos;)
                     def lines = data.readLines()
                     for (line in lines) {
-                        dir(line){
-                            def import_scripts = readFile(file: &apos;/cd3user/oci_tools/cd3_automation_toolkit/import_scripts.safe&apos;)
-                            def script_lines = import_scripts.readLines()
-                            for (script in script_lines) {
-                                if (fileExists(&quot;./${script}&quot;)) {
-                                    sh &quot;sh ./${script}&quot;
-                                }
-                            }
+                        script_full_path = (line.replace(&apos;//&apos;,&apos;/&apos;)).split(&quot;/&quot;)
+                        script_name = script_full_path.last()
+                        script_path = line.split(&quot;${script_name}&quot;)[0]
+                        dir(script_path){
+                            sh &quot;sh ./${script_name}&quot;
                         }
                     }
                 }

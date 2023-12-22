@@ -795,6 +795,8 @@ logging.info("Commands to Execute")
 logging.info("##############################")
 if use_devops=='yes':
     logging.info("/usr/share/jenkins/jenkins.sh &")
+
+logging.info("Commands via CLI - ")
 logging.info("cd "+user_dir+"/oci_tools/cd3_automation_toolkit/")
 #print("python setUpOCI.py "+customer_tenancy_dir + "/" +prefix+"_setUpOCI.properties")
 logging.info("python setUpOCI.py "+customer_tenancy_dir + "/" +prefix+"_setUpOCI.properties")
