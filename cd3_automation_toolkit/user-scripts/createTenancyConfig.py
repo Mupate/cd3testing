@@ -186,7 +186,7 @@ def update_devops_config(prefix, repo_ssh_url,dir_values,devops_user,devops_user
 
     local_repo = git.Repo.init(devops_dir)
     f = open(devops_dir + ".gitignore", "w")
-    git_ignore_file_data = ".DS_Store\n*tfstate*\n*terraform*\ntfplan.out\ntfplan.json\n*backup*\ntf_import_commands*"
+    git_ignore_file_data = ".DS_Store\n*tfstate*\n*terraform*\ntfplan.out\ntfplan.json\n*backup*\ntf_import_commands*\n*cis_report*"
     f.write(git_ignore_file_data)
     f.close()
     existing_remote = local_repo.git.remote()
@@ -198,8 +198,8 @@ def update_devops_config(prefix, repo_ssh_url,dir_values,devops_user,devops_user
     origin.fetch()  # assure we actually have data. fetch() returns useful information
     # Setup a local tracking branch of a remote branch
     local_repo.create_head("main", origin.refs.main)  # create local branch "main" from remote "main"
-    local_repo.heads.main.set_tracking_branch(origin.refs.main)  # set local "master" to track remote "master
-    local_repo.heads.main.checkout()  # checkout local "master" to working tree
+    local_repo.heads.main.set_tracking_branch(origin.refs.main)  # set local "main" to track remote "main"
+    local_repo.heads.main.checkout()  # checkout local "main" to working tree
     local_repo.config_writer().set_value("user", "name", devops_user).release()
     local_repo.config_writer().set_value("user", "email", devops_user).release()
 

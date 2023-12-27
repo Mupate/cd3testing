@@ -976,7 +976,7 @@ def export_subnets_vlans(inputfile, outdir, service_dir, config, signer, ct, exp
             outdir + "/" + reg + "/" + service_dir_vlan + "/tf_import_commands_network_vlans_nonGF.sh", "w")
         importCommands_vlan[reg].write("#!/bin/bash")
         importCommands_vlan[reg].write("\n")
-        importCommands[reg].write("terraform init")
+        importCommands_vlan[reg].write("terraform init")
 
     print("Tab- 'SubnetsVLANs' would be overwritten during export process!!!")
     for reg in export_regions:
