@@ -186,7 +186,7 @@ def update_devops_config(prefix, repo_ssh_url,dir_values,devops_user,devops_user
 
     local_repo = git.Repo.init(devops_dir)
     f = open(devops_dir + ".gitignore", "w")
-    git_ignore_file_data = ".DS_Store\n*tfstate*\n*terraform*\ntfplan.out\ntfplan.json\n*backup*\ntf_import_commands*\n*cis_report*"
+    git_ignore_file_data = ".DS_Store\n*tfstate*\n*terraform*\ntfplan.out\ntfplan.json\n*backup*\ntf_import_commands*\n*cis_report*\n*.safe"
     f.write(git_ignore_file_data)
     f.close()
     existing_remote = local_repo.git.remote()
@@ -794,7 +794,9 @@ logging.info("\n##############################")
 logging.info("Commands to Execute")
 logging.info("##############################")
 if use_devops=='yes':
+    logging.info("Command to start Jenkins - ")
     logging.info("/usr/share/jenkins/jenkins.sh &")
+    logging.info("Access Jenkins using https://<IP Address of the machine hosting docker container>:8443")
 
 logging.info("Commands via CLI - ")
 logging.info("cd "+user_dir+"/oci_tools/cd3_automation_toolkit/")

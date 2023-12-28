@@ -145,6 +145,11 @@ def export_adbs(inputfile, outdir, service_dir, config, signer, ct, export_compa
                 adb = adb_client.get_autonomous_database(adb.id).data
                 print_adbs(region, vnc_client, adb, values_for_column, ntk_compartment_name)
 
+    for reg in export_regions:
+        script_file = f'{outdir}/{reg}/{service_dir}/' + file_name
+        with open(script_file, 'a') as importCommands[reg]:
+            importCommands[reg].write('\n\nterraform plan\n')
+
     commonTools.write_to_cd3(values_for_column, cd3file, "ADB")
 
     print("ADBs exported to CD3\n")

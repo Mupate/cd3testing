@@ -1572,7 +1572,7 @@ def validate_cd3(choices, filename, var_file, prefix, outdir, ct1): #config1, si
 
     if not os.path.exists(filename):
         print("\nCD3 excel sheet not found at "+filename +"\nExiting!!")
-        exit()
+        exit(1)
 
     #ct.get_network_compartment_ids(config['tenancy'], "root", configFileName)
     print("Getting Compartments OCIDs...")

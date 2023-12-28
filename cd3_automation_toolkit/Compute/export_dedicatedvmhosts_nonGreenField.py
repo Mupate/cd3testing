@@ -97,6 +97,12 @@ def export_dedicatedvmhosts(inputfile, outdir, service_dir, config, signer, ct, 
                 dedicatedvmhost=compute_client.get_dedicated_vm_host(dedicatedvmhost.id).data
                 print_dedicatedvmhosts(region, dedicatedvmhost,values_for_column, ntk_compartment_name)
 
+    # write data into file
+    for reg in export_regions:
+        script_file = f'{outdir}/{reg}/{service_dir}/'+file_name
+        with open(script_file, 'a') as importCommands[reg]:
+            importCommands[reg].write('\n\nterraform plan\n')
+
     commonTools.write_to_cd3(values_for_column, cd3file, "DedicatedVMHosts")
 
     print("Dedicated VM Hosts exported to CD3\n")

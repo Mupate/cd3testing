@@ -13,7 +13,7 @@ List cis = ["<b>CIS</b>:disabled","CIS Compliance Checking Script", "Create Key/
 List cd3_services = ["<b>CD3 SERVICES</b>:disabled","Fetch Compartments OCIDs to variables file", "Fetch Protocols to OCI_Protocols"]
 
 List ex_identity = ["<b>IDENTITY</b>:disabled","Export Compartments/Groups/Policies", "Export Users", "Export Network Sources"]
-List ex_network = ["<b>NETWORK</b>:disabled","Export all Network Components", "Export Network components for 'VCNs', 'DRGs' and 'DRGRouteRulesinOCI' Tabs", "Export Network components for 'DHCP' Tab", "Export Network components for 'SecRulesinOCI' Tab", "Export Network components for 'RouteRulesinOCI' Tab", "Export Network components for 'SubnetsVLANs' Tab", "Export Network components for 'NSGs' Tab"]
+List ex_network = ["<b>NETWORK</b>:disabled","Export all Network Components", "Export Network components for VCNs/DRGs/DRGRouteRulesinOCI Tabs", "Export Network components for DHCP Tab", "Export Network components for SecRulesinOCI Tab", "Export Network components for RouteRulesinOCI Tab", "Export Network components for SubnetsVLANs Tab", "Export Network components for NSGs Tab"]
 List ex_dns = ["<b>DNS</b>:disabled","Export DNS Views/Zones/Records", "Export DNS Resolvers"]
 List ex_compute = ["<b>COMPUTE</b>:disabled","Export Dedicated VM Hosts", "Export Instances (excludes instances launched by OKE)"]
 List ex_storage = ["<b>STORAGE</b>:disabled","Export Block Volumes/Block Backup Policy", "Export File Systems", "Export Object Storage Buckets"]

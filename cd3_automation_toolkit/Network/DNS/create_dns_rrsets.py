@@ -72,7 +72,7 @@ def create_terraform_dns_rrsets(inputfile, outdir, service_dir, prefix, ct):
             print(
                 "\nRegion, Compartment Name, View Name fields are mandatory. Please enter a value and try again !!")
             print("\n** Exiting **")
-            exit()
+            exit(1)
 
         # set key for template items
         view_name = str(df["View Name"][i]).strip()

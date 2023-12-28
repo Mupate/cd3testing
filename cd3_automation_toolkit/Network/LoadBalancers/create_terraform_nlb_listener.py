@@ -66,7 +66,7 @@ def create_terraform_nlb_listener(inputfile, outdir, service_dir, prefix, ct):
 
         if region != 'nan' and region not in ct.all_regions:
             print("\nInvalid Region; It should be one of the regions tenancy is subscribed to...Exiting!!")
-            exit()
+            exit(1)
 
         # Check for empty values
         empty_nlb = 0
@@ -148,7 +148,7 @@ def create_terraform_nlb_listener(inputfile, outdir, service_dir, prefix, ct):
                         subnet_id = subnets.vcn_subnet_map[key][2]
                     except Exception as e:
                         print("Invalid Subnet Name specified for row " + str(i + 3) + ". It Doesnt exist in Subnets sheet. Exiting!!!")
-                        exit()
+                        exit(1)
                 tempdict = {'network_compartment_tf_name': commonTools.check_tf_variable(network_compartment_id), 'vcn_name': vcn_name,'subnet_id': subnet_id}
 
             if columnname == "NSGs":

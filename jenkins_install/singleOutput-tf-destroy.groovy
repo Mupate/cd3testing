@@ -4,16 +4,14 @@ pipeline {
     environment {
         CI = 'true'
     }
-  stages {
-    stage('Terraform Destroy Plan') {
-      when {
-        expression {
-            return env.GIT_BRANCH == 'origin/main';
-        }
-        }
+    stages {
+        stage('Terraform Destroy Plan') {
+            when {
+                expression { return env.GIT_BRANCH == 'origin/main'; }
+            }
 
-      steps {
-          script {
+            steps {
+                script {
                     def jobName = env.JOB_NAME
                     def parts = jobName.split('/')
 
@@ -24,36 +22,32 @@ pipeline {
 
                     sh "cd \"${WORKSPACE}/${env.Region}\" && terraform init -upgrade"
                     sh "cd \"${WORKSPACE}/${env.Region}\" && terraform plan -destroy"
-                 }
+                }
             }
         }
 
-     stage('Get Approval') {
-        when {
-        expression {
-            return env.GIT_BRANCH == 'origin/main';
-        }
-    }
-        input {
+        stage('Get Approval') {
+            when {
+                expression { return env.GIT_BRANCH == 'origin/main';}
+            }
+            input {
                 message "Do you want to perform terraform destroy?"
-
-      }
-        steps {
+            }
+            steps {
                 echo "Approval for the Terraform Destroy Granted!"
             }
         }
 
-    stage('Terraform Destroy')
-          when {
-      expression {
-          return env.GIT_BRANCH == 'origin/main';
-      }
-        }
+        stage('Terraform Destroy')
+            when {
+                expression {return env.GIT_BRANCH == 'origin/main';}
+            }
 
-    steps {
-        script {
-          sh "cd \"${WORKSPACE}/${env.Region}\" && terraform destroy --auto-approve"
-               }
-          }
+            steps {
+                script {
+                    sh "cd \"${WORKSPACE}/${env.Region}\" && terraform destroy --auto-approve"
+                }
+            }
+        }
     }
 }

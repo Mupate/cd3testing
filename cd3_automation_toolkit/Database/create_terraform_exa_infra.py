@@ -82,7 +82,7 @@ def create_terraform_exa_infra(inputfile, outdir, service_dir, prefix, ct):
                 str(df.loc[i, 'Availability Domain(AD1|AD2|AD3)']).lower() == 'nan' or \
                 str(df.loc[i, 'Shape']).lower() == 'nan':
             print("\nRegion, Compartment Name, Availability Domain(AD1|AD2|AD3), Shape are mandatory fields. Please enter a value and try again.......Exiting!!")
-            exit()
+            exit(1)
 
         #tempdict = {'oracle_db_software_edition' : 'ENTERPRISE_EDITION_EXTREME_PERFORMANCE'}
 

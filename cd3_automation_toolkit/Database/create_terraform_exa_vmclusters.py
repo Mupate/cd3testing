@@ -92,7 +92,7 @@ def create_terraform_exa_vmclusters(inputfile, outdir, service_dir, prefix, ct):
                 str(df.loc[i, 'Hostname Prefix']).lower() == 'nan' or \
                 str(df.loc[i, 'Oracle Grid Infrastructure Version']).lower() == 'nan':
                 print("\nRegion, Compartment Name, Exadata Infra Display Name, VM Cluster Display Name, Subnet Names, CPU Core Count, Hostname Prefix, Oracle Grid Infrastructure Version, SSH Key Var Name are mandatory fields. Please enter a value and try again.......Exiting!!")
-                exit()
+                exit(1)
 
         # tempdict = {'oracle_db_software_edition' : 'ENTERPRISE_EDITION_EXTREME_PERFORMANCE'}
 
@@ -142,7 +142,7 @@ def create_terraform_exa_vmclusters(inputfile, outdir, service_dir, prefix, ct):
                     except Exception as e:
                         print("Invalid Subnet Name specified for row " + str(
                             i + 3) + ". It Doesnt exist in Subnets sheet. Exiting!!!")
-                        exit()
+                        exit(1)
 
                 tempdict = {'network_compartment_id': commonTools.check_tf_variable(network_compartment_id),
                             'vcn_name': vcn_name,
@@ -163,7 +163,7 @@ def create_terraform_exa_vmclusters(inputfile, outdir, service_dir, prefix, ct):
                     except Exception as e:
                         print("Invalid Subnet Name specified for row " + str(
                             i + 3) + ". It Doesnt exist in Subnets sheet. Exiting!!!")
-                        exit()
+                        exit(1)
 
                 tempdict = {'backup_subnet_name': subnet_id}
 

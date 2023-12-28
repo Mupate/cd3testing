@@ -62,7 +62,7 @@ def create_nlb_backendset_backendservers(inputfile, outdir, service_dir, prefix,
 
         if region != 'nan' and region not in ct.all_regions:
             print("\nInvalid Region; It should be one of the values mentioned in VCN Info tab...Exiting!!")
-            exit()
+            exit(1)
 
         # temporary dictionaries
         tempStr= {}

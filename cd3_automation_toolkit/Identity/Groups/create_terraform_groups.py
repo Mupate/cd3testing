@@ -74,7 +74,7 @@ def create_terraform_groups(inputfile, outdir, service_dir, prefix, ct):
         # Check if values are entered for mandatory fields
         if str(df.loc[i, 'Region']).lower() == 'nan' or str(df.loc[i, 'Name']).lower() == 'nan' :
             print("\nThe values for Region and Name cannot be left empty. Please enter a value and try again !!")
-            exit()
+            exit(1)
 
         for columnname in dfcolumns:
 

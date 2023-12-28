@@ -77,7 +77,7 @@ def create_terraform_oke(inputfile, outdir, service_dir, prefix, ct):
 
         if region not in ct.all_regions:
             print("\nInvalid Region; It should be one of the values mentioned in VCN Info tab...Exiting!!")
-            exit()
+            exit(1)
 
         display_name = str(df.loc[i, 'CompartmentName&Node Pool Name'])
         shapeField = str(df.loc[i, 'Shape'])
@@ -115,7 +115,7 @@ def create_terraform_oke(inputfile, outdir, service_dir, prefix, ct):
                 "\nRegion, Compartment Name, Cluster Name, Network Type, Cluster Kubernetes Version, Pod Security Policies, Load Balancer Subnets, API Endpoint Subnet fields are mandatory. Please enter a value and try again !!\n\nPlease fix it for row : {}".format(
                     i + 3))
             print("\n** Exiting **")
-            exit()
+            exit(1)
         if str(df.loc[i, 'CompartmentName&Node Pool Name']).lower() != 'nan':
             if  str(df.loc[i, 'Nodepool Kubernetes Version']).lower() == 'nan' or \
                     str(df.loc[i, 'Shape']).lower() == 'nan' or \
@@ -126,13 +126,13 @@ def create_terraform_oke(inputfile, outdir, service_dir, prefix, ct):
                 print(
                     "\nCompartmentName&Node Pool Name, Nodepool Kubernetes Version, Shape, Source Details, Number of Nodes, Worker Node Subnet and Availability Domain(AD1|AD2|AD3) fields are mandatory. \n\nPlease fix it for row : {} and try again.".format(i+3))
                 print("\n** Exiting **")
-                exit()
+                exit(1)
         '''
         if str(df.loc[i, 'Network Type']).lower() == 'oci_vcn_ip_native':
             if str(df.loc[i, 'Pod Communication Subnet']).lower() == 'nan':
                 print("\nPod Communication Subnet required for cluster with networking type:OCI_VCN_IP_NATIVE")
                 print("\n** Exiting **")
-                exit()
+                exit(1)
         '''
         # Fetch data; loop through columns
         for columnname in dfcolumns:
@@ -216,7 +216,7 @@ def create_terraform_oke(inputfile, outdir, service_dir, prefix, ct):
                             oke_lb_subnets_list.append(subnets.vcn_subnet_map[key][2])
                         except Exception as e:
                             print("Invalid Subnet Name specified for row {} and column \"{}\". It Doesnt exist in Subnets sheet. Exiting!!!".format(i+3,columnname))
-                            exit()
+                            exit(1)
                     tempdict = {'network_compartment_tf_name': network_compartment_id, 'vcn_name': vcn_name,'oke_lb_subnets': json.dumps(oke_lb_subnets_list)}
                 elif len(oke_lb_subnets) > 1:
                     for subnet in oke_lb_subnets:
@@ -231,7 +231,7 @@ def create_terraform_oke(inputfile, outdir, service_dir, prefix, ct):
                                 oke_lb_subnets_list.append(subnets.vcn_subnet_map[key][2])
                             except Exception as e:
                                 print("Invalid Subnet Name specified for row {} and column \"{}\". It Doesnt exist in Subnets sheet. Exiting!!!".format(i+3,columnname))
-                                exit()
+                                exit(1)
                     tempdict = {'network_compartment_tf_name': network_compartment_id, 'vcn_tf_name': vcn_name,'oke_lb_subnets': json.dumps(oke_lb_subnets_list) }
 
             if columnname == 'API Endpoint Subnet':
@@ -247,11 +247,11 @@ def create_terraform_oke(inputfile, outdir, service_dir, prefix, ct):
                             api_endpoint_subnet = subnets.vcn_subnet_map[key][2]
                         except Exception as e:
                             print("Invalid Subnet Name specified for row {} and column \"{}\". It Doesnt exist in Subnets sheet. Exiting!!!".format(i+3,columnname))
-                            exit()
+                            exit(1)
                     tempdict = {'api_endpoint_subnet': api_endpoint_subnet}
                 elif len(subnet_tf_name) > 1:
                     print("Invalid Subnet Values for row {} and column \"{}\". Only one subnet allowed".format(i+3,columnname))
-                    exit()
+                    exit(1)
 
             if columnname == 'Worker Node Subnet':
                 subnet_tf_name = str(columnvalue).strip().split()
@@ -267,13 +267,13 @@ def create_terraform_oke(inputfile, outdir, service_dir, prefix, ct):
                                 worker_node_subnet = subnets.vcn_subnet_map[key][2]
                             except Exception as e:
                                 print("Invalid Subnet Name specified for row {} and column \"{}\". It Doesnt exist in Subnets sheet. Exiting!!!".format(i+3,columnname))
-                                exit()
+                                exit(1)
                     else:
                         worker_node_subnet = ""
                     tempdict = {'worker_node_subnet': worker_node_subnet}
                 elif len(subnet_tf_name) > 1:
                     print("Invalid Subnet Values for row {} and column \"{}\". Only one subnet allowed".format(i+3,columnname))
-                    exit()
+                    exit(1)
 
             if columnname == 'Pod Communication Subnet':
                 subnet_tf_name = columnvalue.strip()
@@ -286,7 +286,7 @@ def create_terraform_oke(inputfile, outdir, service_dir, prefix, ct):
                             pod_communication_subnet = subnets.vcn_subnet_map[key][2]
                         except Exception as e:
                             print("Invalid Subnet Name specified for row {} and column \"{}\". It Doesnt exist in Subnets sheet. Exiting!!!".format(i+3,columnname))
-                            exit()
+                            exit(1)
                 else:
                     pod_communication_subnet = ""
                 tempdict = {'pod_communication_subnet': pod_communication_subnet}

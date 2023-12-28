@@ -218,7 +218,7 @@ def create_terraform_dns_resolvers(inputfile, outdir, service_dir, prefix, ct):
             print(
                 "\nRegion, Compartment Name, VCN Name fields are mandatory. Please enter a value and try again !!")
             print("\n** Exiting **")
-            exit()
+            exit(1)
 
         # set key for template items
         vcn_name = str(df["VCN Name"][i])

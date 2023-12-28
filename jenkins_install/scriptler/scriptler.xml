@@ -38,6 +38,15 @@
       <onlyMaster>false</onlyMaster>
     </script>
     <script>
+      <id>ValidateParams.groovy</id>
+      <name>ValidateParams.groovy</name>
+      <comment>ValidateParams</comment>
+      <parameters/>
+      <available>true</available>
+      <nonAdministerUsing>true</nonAdministerUsing>
+      <onlyMaster>false</onlyMaster>
+    </script>
+    <script>
       <id>Workflow.groovy</id>
       <name>Workflow</name>
       <comment>Workflow</comment>

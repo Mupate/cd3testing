@@ -1,4 +1,5 @@
 /* Set the various stages of the build */
+def tf_plan = "Changes"
 pipeline {
     agent any
     stages {
@@ -24,13 +25,12 @@ pipeline {
                     }
 
                     // Run Terraform plan and capture the output
-                    def terraformPlanOutput = sh(script: "cd \"${WORKSPACE}/${env.Region}\" && terraform plan -
-out=tfplan.out", returnStdout: true).trim()
+                    def terraformPlanOutput = sh(script: "cd \"${WORKSPACE}/${env.Region}\" && terraform plan -out=tfplan.out", returnStdout: true).trim()
 
                     // Check if the plan contains any changes
                     if (terraformPlanOutput.contains('No changes.')) {
                         echo 'No changes in Terraform plan. Skipping further stages.'
-                        currentBuild.result = 'ABORTED'
+                        tf_plan = "No Changes"
                     } else {
                         // If there are changes, proceed with applying the plan
                         echo "Changes detected in Terraform plan. Proceeding with apply. \n${terraformPlanOutput}"
@@ -39,96 +39,64 @@ out=tfplan.out", returnStdout: true).trim()
                 }
             }
         }
-
-
-
-  /** OPA Stage **/
-stage('OPA') {
-    when {
-        expression {
-            return env.GIT_BRANCH == 'origin/main';
-        }
-    }
-
-    steps {
-        script {
-            // Check if the build is aborted, and if so, set the current stage and return
-            if (currentBuild.result == 'ABORTED') {
-                echo 'No changes in Terraform plan. Skipping further stages.'
-                currentBuild.result = 'ABORTED'
-                return
-            }
-
-            // Run Terraform show and capture the output
-            sh "cd \"${WORKSPACE}/${env.Region}\" && terraform show -json tfplan.out > tfplan.json'
-
-            // Run OPA eval
-            def opaOutput = sh(script: "opa eval -f pretty -b /cd3user/oci_tools/cd3_automation_toolkit/user-scripts/OPA/ -i \
-"${WORKSPACE}/${env.Region}/tfplan.json\" data.terraform.deny", returnStdout: true).trim()    
-
-
-            if (opaOutput == '[]') {
-                     echo "No OPA rules are violated. Proceeding with the next stage."
-            } else {
-                     echo "OPA rules are violated."
-                     echo "OPA Output:\n${opaOutput}"
-
-                     input message: "Do you want to override OPA violations ?"
-                     echo "Approval for OPA violations Granted!"
-
-                     //error('OPA rules are violated. Build failed.')
-            }
-
-        }
-    }
-}
-
-
-
-       stage('Get Approval') {
-    when {
-        expression {
-            return env.GIT_BRANCH == 'origin/main' && currentBuild.result != 'ABORTED'
-        }
-    }
-
-    options {
-        timeout(time: 10, unit: 'MINUTES')
-        }
-
-    steps {
-        script {
-            if (currentBuild.result == 'ABORTED') {
-                echo 'No changes in Terraform plan. Skipping further stages.'
-                currentBuild.result = 'ABORTED'
-                return
-            }
-
-            input message: "Do you want to apply the plan?"
-            echo "Approval for the Apply Granted!"
-        }
-    }
-}
-
-
-
-        stage('Terraform Apply') {
+        /** OPA Stage **/
+        stage('OPA') {
             when {
-                expression {
-                    return env.GIT_BRANCH == 'origin/main';
+                allOf{
+                    expression { return env.GIT_BRANCH == 'origin/main'}
+                    expression { return tf_plan == "Changes" }
                 }
             }
 
             steps {
                 script {
-                  // Check if the build is aborted, and if so, set the current stage as SUCCESS and return
-                   if (currentBuild.result == 'ABORTED') {
-                      echo 'No changes in Terraform plan. Skipping further stages.'
-                      currentBuild.result = 'SUCCESS'
-                      return
-                    }
+                    // Run Terraform show and capture the output
+                    sh "set +x && cd \"${WORKSPACE}/${env.Region}\" && terraform show -json tfplan.out > tfplan.json"
+                    // Run OPA eval
+                    def opaOutput = sh(script: "opa eval -f pretty -b /cd3user/oci_tools/cd3_automation_toolkit/user-scripts/OPA/ -i \"${WORKSPACE}/${env.Region}/tfplan.json\" data.terraform.deny",returnStdout: true).trim()
 
-                    sh "cd \"${WORKSPACE}/${env.Region}\" && terraform apply --auto-approve tfplan.out'
+                    if (opaOutput == '[]') {
+                        echo "No OPA rules are violated. Proceeding with the next stage."
+                    }
+                    else {
+                        echo "OPA Output:\n${opaOutput}"
+                        unstable(message:"OPA Rules are violated.")
+                    }
+                }
+            }
+        }
+
+       stage('Get Approval') {
+            when {
+                allOf{
+                    expression { return env.GIT_BRANCH == 'origin/main'}
+                    expression {return tf_plan == "Changes"}
+                }
+            }
+
+            options {
+                timeout(time: 10, unit: 'MINUTES')
+            }
+
+            steps {
+                script {
+                    input message: "Do you want to apply the plan?"
+                    echo "Approval for the Apply Granted!"
+                }
+            }
+       }
+
+        stage('Terraform Apply') {
+            when {
+                allOf{
+                    expression { return env.GIT_BRANCH == 'origin/main'}
+                    expression {return tf_plan == "Changes"}
+                }
+            }
+
+            steps {
+                script {
+                  sh "cd \"${WORKSPACE}/${env.Region}\" && terraform apply --auto-approve tfplan.out"
                 }
             }
         }

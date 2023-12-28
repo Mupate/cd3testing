@@ -176,7 +176,7 @@ def create_terraform_oss(inputfile, outdir, service_dir, prefix, ct):
 
         if str(df.loc[i, 'Region']).lower() == 'nan' or str(df.loc[i, 'Compartment Name']).lower() == 'nan' or str(df.loc[i, 'Bucket Name']).lower() == 'nan':
             print("\nThe values for Region, Compartment Name and Bucket Name cannot be left empty. Please enter a value and try again !!")
-            exit()
+            exit(1)
 
         for columnname in dfcolumns:
             # Column value

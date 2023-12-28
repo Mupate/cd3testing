@@ -361,7 +361,7 @@ def export_instances(inputfile, outdir, service_dir,config1, signer1, ct, export
 
     # write data into file
     for reg in export_regions:
-        script_file = f'{outdir}/{reg}/{service_dir}/tf_import_commands_instances_nonGF.sh'
+        script_file = f'{outdir}/{reg}/{service_dir}/' + file_name
         with open(script_file, 'a') as importCommands[reg]:
             importCommands[reg].write('\n\nterraform plan\n')
 

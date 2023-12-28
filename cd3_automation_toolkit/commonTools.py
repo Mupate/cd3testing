@@ -485,7 +485,7 @@ class commonTools():
         except Exception as e:
             print(str(e))
             print("Exiting!!")
-            exit()
+            exit(1)
 
         values_for_column = collections.OrderedDict()
         # values_for_column={}
@@ -503,7 +503,7 @@ class commonTools():
         except Exception as e:
             print(str(e))
             print("Exiting!!")
-            exit()
+            exit(1)
         if (sheet_name == "VCN Info"):
             onprem_destinations = ""
             ngw_destinations = ""
@@ -531,7 +531,7 @@ class commonTools():
             except Exception as e:
                 print(str(e))
                 print("Exiting!!")
-                exit()
+                exit(1)
             return
 
 
@@ -550,7 +550,7 @@ class commonTools():
             except Exception as e:
                 print(str(e))
                 print("Exiting!!")
-                exit()
+                exit(1)
             return
 
         sheet_max_rows = sheet.max_row
@@ -629,7 +629,7 @@ class commonTools():
         except Exception as e:
             print(str(e))
             print("Exiting!!")
-            exit()
+            exit(1)
 
     # def backup_file(src_dir, pattern, overwrite):
     def backup_file(src_dir, resource, pattern):
@@ -1029,7 +1029,7 @@ class cd3Services():
             print(e)
             if ('NotAuthenticated' in str(e)):
                 print("\nInvalid Credetials - check your keypair/fingerprint/region...Exiting!!!")
-                exit()
+                exit(1)
 
         if ("OCSWorkVM" in os.getcwd() or 'user-scripts' in os.getcwd()):
             os.chdir("../")

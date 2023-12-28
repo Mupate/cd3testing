@@ -243,22 +243,22 @@ def export_network(options=[]):
         if opt == "Export all Network Components":
             export_networking(inputfile, outdir, outdir_struct, config, signer, ct, export_regions)
             service_dirs = [service_dir_network, service_dir_nsg, service_dir_vlan]
-        if opt == "Export Network components for 'VCNs', 'DRGs' and 'DRGRouteRulesinOCI' Tabs":
+        if opt == "Export Network components for VCNs/DRGs/DRGRouteRulesinOCI Tabs":
             export_major_objects(inputfile, outdir, service_dir_network, config, signer, ct, export_regions)
             service_dirs.append(service_dir_network) if service_dir_network not in service_dirs else service_dirs
-        if opt == "Export Network components for 'DHCP' Tab":
+        if opt == "Export Network components for DHCP Tab":
             export_dhcp(inputfile, outdir, service_dir_network, config, signer, ct, export_regions)
             service_dirs.append(service_dir_network) if service_dir_network not in service_dirs else service_dirs
-        if opt == "Export Network components for 'SecRulesinOCI' Tab":
+        if opt == "Export Network components for SecRulesinOCI Tab":
             export_secrules(inputfile, outdir, service_dir_network, config, signer, ct, export_regions)
             service_dirs.append(service_dir_network) if service_dir_network not in service_dirs else service_dirs
-        if opt == "Export Network components for 'RouteRulesinOCI' Tab":
+        if opt == "Export Network components for RouteRulesinOCI Tab":
             export_routerules(inputfile, outdir, service_dir_network, config, signer, ct, export_regions)
             service_dirs.append(service_dir_network) if service_dir_network not in service_dirs else service_dirs
-        if opt == "Export Network components for 'SubnetsVLANs' Tab":
+        if opt == "Export Network components for SubnetsVLANs Tab":
             export_subnets_vlans(inputfile, outdir, service_dir, config, signer, ct, export_regions)
             service_dirs.append(service_dir_vlan) if service_dir_vlan not in service_dirs else service_dirs
-        if opt == "Export Network components for 'NSGs' Tab":
+        if opt == "Export Network components for NSGs Tab":
             export_nsg(inputfile, outdir, service_dir_nsg, config, signer, ct, export_regions)
             service_dirs.append(service_dir_nsg) if service_dir_nsg not in service_dirs else service_dirs
 
@@ -954,7 +954,7 @@ def execute(command,config_file):
 
     if export_cmd == "":
         print("Failed to get OS details. Exiting!!")
-        exit()
+        exit(1)
 
     split_export_cmd = str.split(export_cmd)
     #subprocess.Popen(split_export_cmd, stdout=subprocess.PIPE,bufsize=1)
@@ -1154,12 +1154,12 @@ else:
             cd3_services(options=sub_options)
 
 # write updated paths to a file
-updated_paths_file = f'/cd3user/oci_tools/cd3_automation_toolkit/updated_paths.safe'
+updated_paths_file = f'{outdir}/updated_paths.safe'
 with open(updated_paths_file, 'w+') as f:
     for item in updated_paths:
         f.write(str(item).replace('//','/')+"\n")
 f.close()
-import_scripts_file = f'/cd3user/oci_tools/cd3_automation_toolkit/import_scripts.safe'
+import_scripts_file = f'{outdir}/import_scripts.safe'
 with open(import_scripts_file, 'w+') as f:
     for item in import_scripts:
         f.write(str(item).replace('//','/')+"\n")

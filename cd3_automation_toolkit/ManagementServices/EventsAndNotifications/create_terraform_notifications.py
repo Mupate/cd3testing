@@ -84,7 +84,7 @@ def create_terraform_notifications(inputfile, outdir, service_dir, prefix, ct):
         # Check if values are entered for mandatory fields
         if str(df.loc[i, 'Region']).lower() == 'nan' or str(df.loc[i, 'Compartment Name']).lower() == 'nan' or str(df.loc[i, 'Topic']).lower() == 'nan' :
             print("\nThe values for Region, Compartment, Topic cannot be left empty. Please enter a value and try again !!")
-            exit()
+            exit(1)
         for columnname in dfcolumns:
             # Column value
             columnvalue = str(df[columnname][i])

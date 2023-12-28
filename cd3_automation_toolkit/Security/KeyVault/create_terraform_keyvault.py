@@ -26,7 +26,7 @@ def create_cis_keyvault(outdir, service_dir, service_dir_iam, prefix, ct, region
 
     if region_name not in ct.all_regions:
         print("Invalid Region!! Tenancy is not subscribed to this region. Please try again")
-        exit()
+        exit(1)
 
 
     # Load the template file

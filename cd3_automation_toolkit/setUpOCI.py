@@ -1220,7 +1220,7 @@ def execute(command,config_file):
 
     if export_cmd == "":
         print("Failed to get OS details. Exiting!!")
-        exit()
+        exit(1)
 
     split_export_cmd = str.split(export_cmd)
     #subprocess.Popen(split_export_cmd, stdout=subprocess.PIPE,bufsize=1)

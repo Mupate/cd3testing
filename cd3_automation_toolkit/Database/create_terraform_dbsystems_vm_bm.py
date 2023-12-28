@@ -109,13 +109,13 @@ def create_terraform_dbsystems_vm_bm(inputfile, outdir, service_dir, prefix, ct)
                 str(df.loc[i, 'Hostname Prefix']).lower() == 'nan' or \
                 str(df.loc[i, 'Shape']).lower() == 'nan' :
             print("\nRegion, Compartment Name, Availability Domain(AD1|AD2|AD3), SSH Key Var Name, Subnet Name, Hostname, Shape are mandatory fields. Please enter a value and try again.......Exiting!!")
-            exit()
+            exit(1)
         if str(df.loc[i, 'DB Name']).lower() == 'nan' or \
                 str(df.loc[i, 'DB Version']).lower() == 'nan' or \
                 str(df.loc[i, 'Database Edition']).lower() == 'nan' or \
                 str(df.loc[i, 'DB Admin Password']).lower() == 'nan':
             print("\nDB Name, DB Version, Database Edition, DB Admin Password are mandatory fields. Please enter a value and try again.......Exiting!!")
-            exit()
+            exit(1)
 
         for columnname in dfcolumns:
             # Column value
@@ -158,7 +158,7 @@ def create_terraform_dbsystems_vm_bm(inputfile, outdir, service_dir, prefix, ct)
                     except Exception as e:
                         print("Invalid Subnet Name specified for row " + str(
                             i + 3) + ". It Doesnt exist in Subnets sheet. Exiting!!!")
-                        exit()
+                        exit(1)
 
                 tempdict = {'network_compartment_id': commonTools.check_tf_variable(network_compartment_id),
                             'vcn_name': vcn_name,

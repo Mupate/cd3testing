@@ -75,7 +75,7 @@ def create_terraform_dns_views(inputfile, outdir, service_dir, prefix, ct):
             print(
                 "\nRegion, Compartment Name, View Name fields are mandatory. Please enter a value and try again !!")
             print("\n** Exiting **")
-            exit()
+            exit(1)
 
         # set key for template items
         display_tf_name = str(df["View Name"][i]).strip()
