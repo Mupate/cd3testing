@@ -33,7 +33,7 @@ Previously uploaded file will be used if left empty.</description>
         <org.biouno.unochoice.ChoiceParameter plugin="uno-choice@2.8.1">
           <name>Workflow</name>
           <description>Select Automation Toolkit Workflow</description>
-          <randomName>choice-parameter-4155232954307</randomName>
+          <randomName>choice-parameter-23492076346439</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.ScriptlerScript">
             <scriptlerScriptId>Workflow.groovy</scriptlerScriptId>
@@ -50,7 +50,7 @@ Previously uploaded file will be used if left empty.</description>
         <org.biouno.unochoice.CascadeChoiceParameter plugin="uno-choice@2.8.1">
           <name>MainOptions</name>
           <description>Select Main Options</description>
-          <randomName>choice-parameter-4155233181089</randomName>
+          <randomName>choice-parameter-23492076464252</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.ScriptlerScript">
             <scriptlerScriptId>MainOptions.groovy</scriptlerScriptId>
@@ -80,7 +80,7 @@ Previously uploaded file will be used if left empty.</description>
         <org.biouno.unochoice.CascadeChoiceParameter plugin="uno-choice@2.8.1">
           <name>SubOptions</name>
           <description>Select Sub Options</description>
-          <randomName>choice-parameter-4155233314315</randomName>
+          <randomName>choice-parameter-23492076517486</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.ScriptlerScript">
             <scriptlerScriptId>SubOptions.groovy</scriptlerScriptId>
@@ -110,7 +110,7 @@ Previously uploaded file will be used if left empty.</description>
         <org.biouno.unochoice.CascadeChoiceParameter plugin="uno-choice@2.8.1">
           <name>SubChildOptions</name>
           <description>Select Options for the SubOptions selected above</description>
-          <randomName>choice-parameter-4155233436370</randomName>
+          <randomName>choice-parameter-23492076566925</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.ScriptlerScript">
             <scriptlerScriptId>SubChildOptions.groovy</scriptlerScriptId>
@@ -140,7 +140,7 @@ Previously uploaded file will be used if left empty.</description>
         <org.biouno.unochoice.DynamicReferenceParameter plugin="uno-choice@2.8.1">
           <name>AdditionalFilters</name>
           <description>Select additional filters</description>
-          <randomName>choice-parameter-4155233597538</randomName>
+          <randomName>choice-parameter-23492076642248</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.ScriptlerScript">
             <scriptlerScriptId>AdditionalFilters.groovy</scriptlerScriptId>
@@ -178,7 +178,7 @@ Previously uploaded file will be used if left empty.</description>
         </org.biouno.unochoice.DynamicReferenceParameter>
         <org.biouno.unochoice.CascadeChoiceParameter plugin="uno-choice@2.8.1">
           <name>ParametersValidation</name>
-          <randomName>choice-parameter-4155233744019</randomName>
+          <randomName>choice-parameter-23492076724937</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.ScriptlerScript">
             <scriptlerScriptId>ValidateParams.groovy</scriptlerScriptId>
@@ -230,13 +230,16 @@ def git_status = 0
 def generateStage(job) {
     return {
         stage("Stage: ${job}") {
-            sh '''
-            date +%m-%d-%Y-%H-%M-%S
-            '''
             def values = job.split('/')
-            region = values[0]
-            service = values[1]
-            job_name = "./terraform_files/${region}/${service}/terraform-apply".replace("//","/")
+            if (values.size() > 1) {
+                region = values[0]
+                service = values[1]
+                job_name = "./terraform_files/${region}/${service}/terraform-apply".replace("//","/")
+            }else {
+                region = values[0]
+                job_name = "./terraform_files/${region}/terraform-apply".replace("//","/")
+            }
+
             build job: "${job_name}"
         }
     }
@@ -340,15 +343,15 @@ pipeline {
             )
     }
     stages {
-		stage ('Validate Input Parameters') {
+		stage ('Validate Parameters') {
 		    steps {
         		script {
         		    if (ParametersValidation != "Passed"){
-                        echo 'Input Parameter Validation Failed. Setting Build to FAILED'
-                        unstable(message:"Input Parameter Validation Failed. Setting Build to Unstable")
+        		        unstable(message:"Input Parameter Validation Failed. Setting Build to Unstable")
+
             		}else {
-            		    echo 'Input Parameter Validation Successful. Proceeding further'
-            		    
+            		    echo 'Parameter Validation Successful.'
+
             		}
     		    }
         	}
@@ -394,13 +397,13 @@ pipeline {
                 expression {return ParametersValidation == "Passed" }
             }
 			steps {
-                dir('/cd3user/oci_tools/cd3_automation_toolkit') {
-                    sh '''
-                        
-                        python --version
-                        python setUpOCI_jenkins.py --main_options "${MainOptions}" --sub_options "${SubOptions}" --sub_child_options "${SubChildOptions}" --add_filter "${AdditionalFilters}" $prop_file || exit 1
-                    '''
-                }
+                sh '''
+                    set +x
+                    cd /cd3user/oci_tools/cd3_automation_toolkit
+                    python --version
+                    python setUpOCI_jenkins.py --main_options "${MainOptions}" --sub_options "${SubOptions}" --sub_child_options "${SubChildOptions}" --add_filter "${AdditionalFilters}" $prop_file || exit 1
+                '''
+
             }
         }
         stage ('Run Import Commands') {
@@ -409,25 +412,19 @@ pipeline {
 				    expression {return "${Workflow}" == "Export Resources from OCI (NonGreenfield Workflow)"}
 				    expression {return ParametersValidation == "Passed" }
 				}
-				
+
             }
             steps {
-                dir('/cd3user/oci_tools/cd3_automation_toolkit') {
-                    sh '''
-                        set +x
-                        echo "running import scripts"
-                    '''
-                }
+
                 script {
-                    def data = readFile(file: '/cd3user/tenancies/${customer_prefix}/terraform_files/import_scripts.safe')
+                    def data = readFile(file: "/cd3user/tenancies/${customer_prefix}/terraform_files/import_scripts.safe")
                     def lines = data.readLines()
                     for (line in lines) {
                         script_full_path = (line.replace('//','/')).split("/")
                         script_name = script_full_path.last()
                         script_path = line.split("${script_name}")[0]
-                        dir(script_path){
-                            sh "sh ./${script_name}"
-                        }
+                        sh(script:"cd ${script_path} &amp;&amp; sh ./${script_name}", returnStdout: true )
+
                     }
                 }
             }
@@ -435,16 +432,17 @@ pipeline {
         stage ('Git Commit') {
             when{
                 expression {return ParametersValidation == "Passed" }
-                
+
             }
 			steps {
-                dir("/cd3user/tenancies/${customer_prefix}/terraform_files") {
+
                     script {
-                        git_status = sh(script: " git status --porcelain | wc -l", returnStdout: true).trim()
+                        git_status = sh(script: " cd /cd3user/tenancies/${customer_prefix}/terraform_files &amp;&amp; git status --porcelain | wc -l", returnStdout: true).trim()
                         // Check if anything to commit
                         if ("${git_status}" > 0) {
                             sh(script: '''
                                 set +x
+                                cd /cd3user/tenancies/${customer_prefix}/terraform_files
                                 echo "-----start timestamp-----"
                                 time_stamp="$(date +%m-%d-%Y-%H-%M-%S)"
                                 commit_msg="cd3 commit at ${time_stamp}"
@@ -456,7 +454,7 @@ pipeline {
                             echo 'Nothing to commit. Skipping further stages.'
                         }
                     }
-                }
+                
             }
         }
         stage ('Trigger Terraform Pipelines'){
@@ -470,13 +468,12 @@ pipeline {
             steps {
                 script {
                     def jobs = []
-                    def data = readFile(file: '/cd3user/tenancies/${customer_prefix}/terraform_files/updated_paths.safe')
+                    def data = readFile(file: "/cd3user/tenancies/${customer_prefix}/terraform_files/updated_paths.safe")
                     def lines = data.readLines()
                     for (line in lines) {
                         line = line.split('terraform_files/')[1]
                         jobs.add(line)
                     }
-                    print(jobs)
                     parallelStagesMap = jobs.collectEntries {
                         ["${it}" : generateStage(it)]
                     }

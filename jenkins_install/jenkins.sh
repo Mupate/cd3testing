@@ -19,7 +19,7 @@ cp -r ${JENKINS_INSTALL}/scriptler $JENKINS_HOME
 
 #Generate Self Signed Cert and Copy to JENKINS_HOME
 keytool -genkey -keystore "oci_toolkit.jks" -alias "automationtoolkit" -keyalg RSA -validity 60 -keysize 2048 -dname "CN=oci-automation, OU=toolkit, C=IN" -ext SAN=dns:automationtoolkit,ip:127.0.0.1 -storepass automationtoolkit && keytool -importkeystore -srckeystore oci_toolkit.jks -srcstoretype JKS -deststoretype PKCS12 -destkeystore oci_toolkit.p12 -srcstorepass automationtoolkit -deststorepass automationtoolkit
-cp oci_toolkit.jks $JENKINS_HOME
+cp oci_toolkit.p12 $JENKINS_HOME
 
 
 touch "${COPY_REFERENCE_FILE_LOG}" || { echo "Can not write to ${COPY_REFERENCE_FILE_LOG}. Wrong volume permissions?"; exit 1; }

@@ -842,7 +842,7 @@ variable "fss" {
     compartment_id       = string
     display_name         = optional(string)
     source_snapshot_name = optional(string)
-    kms_key_id        = optional(string)
+    kms_key_name         = optional(string)
     defined_tags         = optional(map(any))
     freeform_tags        = optional(map(any))
   }))

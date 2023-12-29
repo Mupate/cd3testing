@@ -25,7 +25,7 @@ pipeline {
                     }
 
                     // Run Terraform plan and capture the output
-                    def terraformPlanOutput = sh(script: "cd \"${WORKSPACE}/${env.Region}\" && terraform plan -out=tfplan.out", returnStdout: true).trim()
+                    def terraformPlanOutput = sh(script: "cd \"${WORKSPACE}/${env.Region}\" && terraform plan -no-color -out=tfplan.out", returnStdout: true).trim()
 
                     // Check if the plan contains any changes
                     if (terraformPlanOutput.contains('No changes.')) {

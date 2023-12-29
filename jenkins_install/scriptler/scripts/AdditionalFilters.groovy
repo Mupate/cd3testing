@@ -83,10 +83,15 @@ for (item in SubOptions.split(",")) {
         html_to_be_rendered = """
         ${html_to_be_rendered}
 
-
 <tr>
    <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"orm_region=[\"></td>
      <td><label title=\"service1-label\" class=\" \">Enter region (comma separated without spaces if multiple) for which you want to upload Terraform Stack - eg ashburn,phoenix,global : </label></td>
+         <td><input type=\"text\" class=\" \" name=\"value\" > </br></td>
+   <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"]@\"></td>
+       </tr>
+<tr>
+   <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"orm_compartments=[\"></td>
+     <td><label title=\"service1-label\" class=\" \">Enter compartment name to create RM Stack<b> (Mandatory) </b> : </label></br></td>
          <td><input type=\"text\" class=\" \" name=\"value\" > </br></td>
    <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"]@\"></td>
        </tr>

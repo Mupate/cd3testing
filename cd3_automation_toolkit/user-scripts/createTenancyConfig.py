@@ -186,7 +186,7 @@ def update_devops_config(prefix, repo_ssh_url,dir_values,devops_user,devops_user
 
     local_repo = git.Repo.init(devops_dir)
     f = open(devops_dir + ".gitignore", "w")
-    git_ignore_file_data = ".DS_Store\n*tfstate*\n*terraform*\ntfplan.out\ntfplan.json\n*backup*\ntf_import_commands*\n*cis_report*\n*.safe"
+    git_ignore_file_data = ".DS_Store\n*tfstate*\n*terraform*\ntfplan.out\ntfplan.json\n*backup*\ntf_import_commands*\n*cis_report*\n*.safe\n*stacks.zip"
     f.write(git_ignore_file_data)
     f.close()
     existing_remote = local_repo.git.remote()
@@ -290,19 +290,13 @@ try:
         exit(1)
 
     if auth_mechanism == 'api_key' or auth_mechanism == 'session_token':
-        if auth_mechanism == 'api_key':
-            print("=================================================================")
-            print("NOTE: Make sure the API Public Key is added to the OCI Console!!!")
-            print("=================================================================")
+        print("=================================================================")
+        print("NOTE: Make sure the API Public Key is added to the OCI Console!!!")
+        print("=================================================================")
 
         fingerprint = config.get('Default', 'fingerprint').strip()
         if fingerprint == "" or fingerprint == "\n":
             print("Fingerprint cannot be left empty...Exiting !!")
-            exit(1)
-
-        user = config.get('Default', 'user_ocid').strip()
-        if user == "" or user == "\n":
-            print("user_ocid cannot be left empty...Exiting !!")
             exit(1)
 
         key_path = config.get('Default', 'key_path').strip()
@@ -312,6 +306,14 @@ try:
             print("Invalid PEM Key File at "+key_path+". Please try again......Exiting !!")
             exit(1)
 
+        # user_ocid mandatory for api_key
+        if auth_mechanism == 'api_key':
+            user = config.get('Default', 'user_ocid').strip()
+            if user == "" or user == "\n":
+                print("user_ocid cannot be left empty...Exiting !!")
+                exit(1)
+
+        # security_token_file madatory for session_token
         if auth_mechanism == 'session_token':
             session_token_file = config.get('Default', 'security_token_file').strip()
             if session_token_file == "" or session_token_file == "\n" or not os.path.isfile(session_token_file):

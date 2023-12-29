@@ -94,14 +94,13 @@ def update_path_list(regions_path=[],service_dirs=[]):
             path_value = ((outdir + "/" + reg + "/" + current_dir).rstrip('/')).replace("//","/")
             items = glob.glob(path_value + "/*")
             files = [f for f in items if
-                     (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
+                     (os.path.isfile(f) and (datetime.datetime.fromtimestamp(os.path.getmtime(f)) >= exec_start_time))]
             if files:
                 if path_value not in updated_paths:
                     updated_paths.append(path_value)
                 for script_file in files:
                     if script_file.endswith(".sh") and script_file not in import_scripts:
                         import_scripts.append(script_file)
-
 
 def fetch_compartments(outdir, outdir_struct, ct):
     var_files={}
@@ -895,13 +894,7 @@ def create_cis_features(options=[], sub_options=[]):
 
     # Update modified path list
     update_path_list(regions_path=[""], service_dirs=service_dirs)
-    for current_dir in service_dirs:
-        path_value = (outdir + "/" + current_dir).rstrip('/')
-        items = glob.glob(path_value + "/*")
-        files = [f for f in items if (os.path.isfile(f) and (time.ctime(os.path.getmtime(f)) > exec_start_time))]
-        if files:
-            if path_value not in updated_paths:
-                updated_paths.append(path_value)
+
 
 def initiate_cis_scan(sub_options,outdir, prefix, config_file):
     for opt in sub_options:
@@ -1047,11 +1040,21 @@ run_fetch_script = 0
 subscribed_regions = ct.get_subscribedregions(config,signer)
 home_region = ct.home_region
 
+# Set service directories as per outdir_structure file
+# Add service name from outdir_structure_file to dir_services here
+dir_services = ["identity","tagging","network","loadbalancer","networkloadbalancer","vlan","nsg","instance",
+                "block-volume","dedicated-vm-host","adb","dbsystem-vm-bm","database-exacs","fss","oke","sddc",
+                "cloud-guard","managementservices","budget","kms","object-storage","dns"]
 if len(outdir_struct.items())==0:
-    var_file = f'{outdir}/{home_region}/variables_{home_region}.tf'
+    for item in dir_services:
+        varname = "service_dir_" + str(item.replace("-", "_")).strip()
+        exec(varname + "= \"\"")
 else:
-    identity_dir = outdir_struct['identity']
-    var_file = f'{outdir}/{home_region}/{identity_dir}/variables_{home_region}.tf'
+    for key,value in outdir_struct.items():
+        varname = "service_dir_"+str(key.replace("-","_")).strip()
+        exec(varname + "= value")
+
+var_file = (f'{outdir}/{home_region}/{service_dir_identity}/variables_{home_region}.tf').replace('//','/')
 
 try:
     # read variables file
@@ -1083,11 +1086,8 @@ global updated_paths
 global import_scripts
 updated_paths = []
 import_scripts = []
-exec_start_time = time.ctime()
+exec_start_time = datetime.datetime.now()
 
-for key,value in outdir_struct.items():
-    varname = "service_dir_"+str(key.replace("-","_")).strip()
-    exec(varname + "= value")
 
 ## Menu Options
 if non_gf_tenancy:

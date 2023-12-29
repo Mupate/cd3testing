@@ -200,20 +200,26 @@ def create_resource_manager(outdir,var_file, outdir_struct,prefix,auth_mechanism
                 #put comp name of last stack in the variable
                 comp_name = rm_comp_name
         else:
-            comp_name = input("Enter Resource Manager Compartment Name for "+region +" region: ")
+            if ct.orm_comp_filter == "null":
+                    comp_name = None
+            else:
+                comp_name = ct.orm_comp_filter if ct.orm_comp_filter else input("Enter Resource Manager Compartment Name for "+region +" region: ")
+
+            #comp_name = input("Enter Resource Manager Compartment Name for "+region +" region: ")
 
         try:
             comp_id = ct.ntk_compartment_ids[comp_name]
         except KeyError as e:
-            print("Compartment Name "+comp_name +" does not exist in OCI. Please Try Again")
+            #print("Compartment Name "+comp_name +" does not exist in OCI. Please Try Again")
             if os.path.exists(rm_ocids_file):
                 print("Removing rm_ocids.csv file for region "+region)
                 os.remove(rm_ocids_file)
-            comp_name = input("Enter a new Compartment Name for Resource Manager for "+region +" region: ")
-            try:
-                comp_id = ct.ntk_compartment_ids[comp_name]
-            except Exception as e:
-                print("Invalid Compartment Name. Please Try again. Exiting...")
+            #comp_name = input("Enter a new Compartment Name for Resource Manager for "+region +" region: ")
+            #try:
+            #    comp_id = ct.ntk_compartment_ids[comp_name]
+            #except Exception as e:
+            print("Invalid Compartment Name. Please Try again. Exiting...")
+            exit(1)
 
 
     # Start creating stacks

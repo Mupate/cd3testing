@@ -55,6 +55,7 @@ class commonTools():
         self.bv_pattern_filter = None
         self.bv_ad_filter = None
         self.orm_reg_filter = None
+        self.orm_comp_filter = None
         self.vault_region = None
         self.vault_comp = None
         self.budget_amount = None
@@ -122,6 +123,9 @@ class commonTools():
             if 'orm_region' in i:
                 self.orm_reg_filter = (i.split("=")[1])[2:][:-2]
 
+            if 'orm_compartments' in i:
+                self.orm_comp_filter = (i.split("=")[1])[2:][:-2]
+                self.orm_comp_filter = self.orm_comp_filter if self.orm_comp_filter else "null"
             if 'vault_region' in i:
                 self.vault_region = (i.split("=")[1])[2:][:-2]
 
@@ -944,7 +948,7 @@ def section(title='', header=False, padding=117):
         print(separator * padding)
 
 
-def exit_menu(msg, exit_code=0):
+def exit_menu(msg, exit_code=1):
     print(msg)
     exit(exit_code)
 
