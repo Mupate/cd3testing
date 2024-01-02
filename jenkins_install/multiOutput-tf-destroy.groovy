@@ -1,6 +1,9 @@
 /* Set the various stages of the build */
 pipeline {
     agent any
+    options {
+        ansiColor('xterm')
+    }
     stages {
         stage('Terraform Destroy Plan') {
             when {

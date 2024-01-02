@@ -2,6 +2,9 @@
 def tf_plan = "Changes"
 pipeline {
     agent any
+    options {
+        ansiColor('xterm')
+    }
     stages {
         stage('Terraform Plan') {
             when {

@@ -15,7 +15,7 @@ from commonTools import *
 from collections import namedtuple
 import requests
 import subprocess
-import time, glob, os
+import datetime,glob,os
 
 
 def show_options(options, quit=False, menu=False, extra=None, index=0):
@@ -789,7 +789,6 @@ def create_databases(options=[]):
     # Update modified path list
     update_path_list(regions_path=subscribed_regions, service_dirs=service_dirs)
 
-
 def create_exa_infra_vmclusters(inputfile, outdir,service_dir, prefix,ct):
     Database.create_terraform_exa_infra(inputfile, outdir, service_dir, prefix, ct)
     Database.create_terraform_exa_vmclusters(inputfile, outdir, service_dir, prefix, ct)
@@ -913,9 +912,9 @@ def start_cis_download(outdir, prefix, config_file):
 
 def start_cis_scan(outdir, prefix, config_file):
     cmd = "python cis_reports.py"
-    user_input = input("Enter command to execute the script. Press Enter to execute {} : ".format(cmd))
-    if user_input!='':
-        cmd = "{}".format(user_input)
+    #user_input = input("Enter command to execute the script. Press Enter to execute {} : ".format(cmd))
+    #if user_input!='':
+    #    cmd = "{}".format(user_input)
     split = str.split(cmd)
 
     dirname = prefix + "_cis_report"
@@ -972,7 +971,6 @@ setUpOCI_props.read(args.propsfile)
 main_options = args.main_options.split(",")
 sub_options = args.sub_options.split(",")
 sub_child_options = args.sub_child_options.split(",")
-
 
 #Read Config file Variables
 try:
@@ -1149,7 +1147,7 @@ else:
         if option == 'Software-Defined Data Centers - OCVS':
             create_sddc()
         if option == 'CIS Compliance Features':
-            create_cis_features(options=sub_options)
+            create_cis_features(options=sub_options,sub_options=sub_child_options)
         if option == 'CD3 Services':
             cd3_services(options=sub_options)
 

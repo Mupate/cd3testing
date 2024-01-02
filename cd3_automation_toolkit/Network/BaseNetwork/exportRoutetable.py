@@ -314,5 +314,6 @@ def export_routetable(inputfile, outdir, service_dir,config1,signer1, ct, export
     if tf_import_cmd:
         commonTools.write_to_cd3(values_for_vcninfo, cd3file, "VCN Info")
         for reg in export_regions:
+            importCommands[reg].write('\n\nterraform plan\n')
             importCommands[reg].close()
 

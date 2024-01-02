@@ -262,4 +262,5 @@ def export_seclist(inputfile, outdir, service_dir,config,signer, ct, export_comp
     print("SecRules exported to CD3\n")
     if tf_import_cmd:
         for reg in export_regions:
+            importCommands[reg].write('\n\nterraform plan\n')
             importCommands[reg].close()

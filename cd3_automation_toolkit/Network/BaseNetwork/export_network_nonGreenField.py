@@ -709,8 +709,8 @@ def export_major_objects(inputfile, outdir, service_dir, config, signer, ct, exp
                         subs_region_list.remove(current_region)
                         for new_reg in subs_region_list:
                             config.__setitem__("region", ct.region_dict[new_reg])
-                            dest_rpc_dict[new_reg] = oci.core.VirtualNetworkClient(config,
-                                                                                   retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY)
+                            dest_rpc_dict[new_reg] = oci.core.VirtualNetworkClient(config=config,
+                                                                                   retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY,signer=signer)
                     SOURCE_RPC_LIST = oci.pagination.list_call_get_all_results(
                         vnc.list_remote_peering_connections,
                         compartment_id=ct.ntk_compartment_ids[
@@ -875,6 +875,7 @@ def export_major_objects(inputfile, outdir, service_dir, config, signer, ct, exp
     print("VCNs exported to CD3\n")
 
     for reg in export_regions:
+        importCommands[reg].write('\n\nterraform plan\n')
         importCommands[reg].close()
         oci_obj_names[reg].close()
 
@@ -931,7 +932,9 @@ def export_dhcp(inputfile, outdir, service_dir, config, signer, ct, export_compa
                                    dhcp_info)
     commonTools.write_to_cd3(values_for_column_dhcp, cd3file, "DHCP")
     print("DHCP exported to CD3\n")
+
     for reg in export_regions:
+        importCommands[reg].write('\n\nterraform plan\n')
         importCommands[reg].close()
 
 

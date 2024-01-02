@@ -239,7 +239,6 @@ def generateStage(job) {
                 region = values[0]
                 job_name = "./terraform_files/${region}/terraform-apply".replace("//","/")
             }
-
             build job: "${job_name}"
         }
     }
@@ -332,6 +331,9 @@ properties([
 ])
 pipeline {
     agent any
+        options {
+        ansiColor('xterm')
+    }
     environment {
         prop_file = "/cd3user/tenancies/${customer_prefix}/${customer_prefix}_setUpOCI.properties"
         //current_timestamp = sh (script: 'date +%m-%d-%Y-%H-%M-%S', returnStdout: true).trim()
@@ -351,8 +353,7 @@ pipeline {
 
             		}else {
             		    echo 'Parameter Validation Successful.'
-
-            		}
+                    }
     		    }
         	}
 		}
@@ -403,7 +404,6 @@ pipeline {
                     python --version
                     python setUpOCI_jenkins.py --main_options "${MainOptions}" --sub_options "${SubOptions}" --sub_child_options "${SubChildOptions}" --add_filter "${AdditionalFilters}" $prop_file || exit 1
                 '''
-
             }
         }
         stage ('Run Import Commands') {
@@ -412,10 +412,8 @@ pipeline {
 				    expression {return "${Workflow}" == "Export Resources from OCI (NonGreenfield Workflow)"}
 				    expression {return ParametersValidation == "Passed" }
 				}
-
             }
             steps {
-
                 script {
                     def data = readFile(file: "/cd3user/tenancies/${customer_prefix}/terraform_files/import_scripts.safe")
                     def lines = data.readLines()
@@ -423,8 +421,7 @@ pipeline {
                         script_full_path = (line.replace('//','/')).split("/")
                         script_name = script_full_path.last()
                         script_path = line.split("${script_name}")[0]
-                        sh(script:"cd ${script_path} &amp;&amp; sh ./${script_name}", returnStdout: true )
-
+                        sh(script:"cd ${script_path};sh ./${script_name}")
                     }
                 }
             }
@@ -432,29 +429,26 @@ pipeline {
         stage ('Git Commit') {
             when{
                 expression {return ParametersValidation == "Passed" }
-
             }
 			steps {
-
-                    script {
-                        git_status = sh(script: " cd /cd3user/tenancies/${customer_prefix}/terraform_files &amp;&amp; git status --porcelain | wc -l", returnStdout: true).trim()
-                        // Check if anything to commit
-                        if ("${git_status}" > 0) {
-                            sh(script: '''
-                                set +x
-                                cd /cd3user/tenancies/${customer_prefix}/terraform_files
-                                echo "-----start timestamp-----"
-                                time_stamp="$(date +%m-%d-%Y-%H-%M-%S)"
-                                commit_msg="cd3 commit at ${time_stamp}"
-                                git add .
-                                git commit -m "${commit_msg}"
-                                git push
-                             ''')
-                        }else {
-                            echo 'Nothing to commit. Skipping further stages.'
-                        }
+                script {
+                    git_status = sh(script: "cd /cd3user/tenancies/${customer_prefix}/terraform_files; git status --porcelain | wc -l", returnStdout: true).trim()
+                    // Check if anything to commit
+                    if ("${git_status}" > 0) {
+                        sh(script: '''
+                            set +x
+                            cd /cd3user/tenancies/${customer_prefix}/terraform_files
+                            echo "-----start timestamp-----"
+                            time_stamp="$(date +%m-%d-%Y-%H-%M-%S)"
+                            commit_msg="cd3 commit at ${time_stamp}"
+                            git add -A .
+                            git commit -m "${commit_msg}"
+                            git push
+                         ''')
+                    }else {
+                        echo 'Nothing to commit. Skipping further stages.'
                     }
-                
+                }
             }
         }
         stage ('Trigger Terraform Pipelines'){
@@ -463,13 +457,15 @@ pipeline {
     				expression {return "${git_status}" > 0}
     				expression {return ParametersValidation == "Passed" }
 			    }
-				
-            }
+			}
             steps {
                 script {
                     def jobs = []
                     def data = readFile(file: "/cd3user/tenancies/${customer_prefix}/terraform_files/updated_paths.safe")
                     def lines = data.readLines()
+                    if (lines.size() == 0) {
+                        println("No terraform configuration file generated")
+                    }
                     for (line in lines) {
                         line = line.split('terraform_files/')[1]
                         jobs.add(line)
@@ -483,9 +479,7 @@ pipeline {
                 }
             }
         }
-        
     }
-    
 }</script>
     <sandbox>true</sandbox>
   </definition>
