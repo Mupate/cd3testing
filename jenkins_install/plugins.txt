@@ -18,5 +18,5 @@ rebuild:330.v645b_7df10e2a_
 uno-choice:2.8.1
 file-parameters:316.va_83a_1221db_a_7
 scriptler:334.v29792d5a_c058
-ansicolor:1.0.4
+ansicolor:0.6.2
 

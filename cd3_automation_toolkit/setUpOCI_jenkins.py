@@ -255,8 +255,9 @@ def export_network(options=[]):
             export_routerules(inputfile, outdir, service_dir_network, config, signer, ct, export_regions)
             service_dirs.append(service_dir_network) if service_dir_network not in service_dirs else service_dirs
         if opt == "Export Network components for SubnetsVLANs Tab":
-            export_subnets_vlans(inputfile, outdir, service_dir, config, signer, ct, export_regions)
+            export_subnets_vlans(inputfile, outdir, outdir_struct, config, signer, ct, export_regions)
             service_dirs.append(service_dir_vlan) if service_dir_vlan not in service_dirs else service_dirs
+            service_dirs.append(service_dir_network) if service_dir_network not in service_dirs else service_dirs
         if opt == "Export Network components for NSGs Tab":
             export_nsg(inputfile, outdir, service_dir_nsg, config, signer, ct, export_regions)
             service_dirs.append(service_dir_nsg) if service_dir_nsg not in service_dirs else service_dirs
@@ -265,7 +266,10 @@ def export_network(options=[]):
     print("NOTE: Make sure to execute tf_import_commands_network_major-objects_nonGF.sh before executing the other scripts.")
     print("=====================================================================================================================")
     # Update modified path list
-    update_path_list(regions_path=export_regions, service_dirs=service_dirs)
+    regions_path = export_regions
+    regions_path.append("global")
+    service_dirs.append("rpc")
+    update_path_list(regions_path=regions_path, service_dirs=service_dirs)
 
 
 def export_networking(inputfile, outdir, service_dir,config, signer, ct, export_regions):
@@ -640,7 +644,10 @@ def create_network(options=[], sub_options=[]):
             create_drg_connectivity(inputfile, outdir, service_dir_network, prefix, ct, non_gf_tenancy=non_gf_tenancy)
             service_dirs.append(service_dir_network) if service_dir_network not in service_dirs else service_dirs
     # Update modified path list
-    update_path_list(regions_path=subscribed_regions, service_dirs=service_dirs)
+    regions_path = subscribed_regions
+    regions_path.append("global")
+    service_dirs.append("rpc")
+    update_path_list(regions_path=regions_path, service_dirs=service_dirs)
 
 
 def modify_terraform_network(inputfile, outdir, service_dir,  prefix, ct, non_gf_tenancy):
