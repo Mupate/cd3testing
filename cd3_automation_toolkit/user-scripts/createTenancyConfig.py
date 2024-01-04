@@ -127,15 +127,9 @@ def create_devops_resources(config,signer):
     return repo_url
 
 
-def update_devops_config(prefix, repo_ssh_url,dir_values,devops_user,devops_user_key,devops_dir,ct):
+def update_devops_config(prefix,git_config_file, repo_ssh_url,dir_values,devops_user,devops_user_key,devops_dir,ct):
     # create git config file
-    git_config_file_location = "/cd3user/.ssh"
-    git_config_file = git_config_file_location + "/config"
-    if not os.path.exists(git_config_file_location):
-        os.makedirs(git_config_file_location, 0o777)
-
     file = open(git_config_file, "w")
-
     file.write("Host devops.scmservice.*.oci.oraclecloud.com\n "
                 "StrictHostKeyChecking no\n "
                 "User "+str(devops_user)+"\n "
@@ -143,6 +137,17 @@ def update_devops_config(prefix, repo_ssh_url,dir_values,devops_user,devops_user
 
     os.chmod(git_config_file, 0o600)
     file.close()
+
+    # create symlink for Git Config file for SSh operations.
+    src = git_config_file
+    if not os.path.exists("/cd3user/.ssh"):
+        os.makedirs("/cd3user/.ssh")
+    dst = "/cd3user/.ssh/config"
+    try:
+        os.symlink(src,dst)
+    except FileExistsError as e:
+        os.unlink(dst)
+        os.symlink(src,dst)
 
     # create jenkins.properties file
     if not os.path.exists(jenkins_home):
@@ -161,21 +166,6 @@ def update_devops_config(prefix, repo_ssh_url,dir_values,devops_user,devops_user
                 "outdir_structure=[\""+dir_structure+"\"]\n")
     file.close()
 
-    '''
-    # create setupoci.py job config file
-
-    setupoci_jenkins_config_file_path = open(os.environ['JENKINS_INSTALL']+"/setUpOCI_config.xml", 'r')
-    setupoci_jenkins_config_file_data = ""
-    for line in setupoci_jenkins_config_file_path.readlines():
-        if line.__contains__("<!-- set customer_prefix -->"):
-            setupoci_jenkins_config_file_data = setupoci_jenkins_config_file_data+"<!-- set customer_prefix --><command>customer_prefix=\""+prefix+"\"\n"
-        else:
-            setupoci_jenkins_config_file_data = setupoci_jenkins_config_file_data+line
-
-    f = open(os.environ['JENKINS_INSTALL']+"/setUpOCI_config.xml", 'w+')
-    f.write(setupoci_jenkins_config_file_data)
-    f.close()
-    '''
     # Update Environment variable for jenkins
     yaml_file_path = os.environ['JENKINS_INSTALL'] + "/jcasc.yaml"
     with open(yaml_file_path) as yaml_file:
@@ -289,7 +279,7 @@ try:
         print("Auth Mechanism cannot be left empty...Exiting !!")
         exit(1)
 
-    if auth_mechanism == 'api_key' or auth_mechanism == 'session_token':
+    if auth_mechanism == 'api_key':# or auth_mechanism == 'session_token':
         print("=================================================================")
         print("NOTE: Make sure the API Public Key is added to the OCI Console!!!")
         print("=================================================================")
@@ -306,19 +296,21 @@ try:
             print("Invalid PEM Key File at "+key_path+". Please try again......Exiting !!")
             exit(1)
 
-        # user_ocid mandatory for api_key
-        if auth_mechanism == 'api_key':
-            user = config.get('Default', 'user_ocid').strip()
-            if user == "" or user == "\n":
-                print("user_ocid cannot be left empty...Exiting !!")
-                exit(1)
+        user = config.get('Default', 'user_ocid').strip()
+        if user == "" or user == "\n":
+            print("user_ocid cannot be left empty...Exiting !!")
+            exit(1)
 
         # security_token_file madatory for session_token
+        '''
         if auth_mechanism == 'session_token':
             session_token_file = config.get('Default', 'security_token_file').strip()
-            if session_token_file == "" or session_token_file == "\n" or not os.path.isfile(session_token_file):
-                print("Invalid path for Session Token File...Exiting !!")
+            if session_token_file == "" or session_token_file == "\n":
+                session_token_file = "/cd3user/.oci/sessions/DEFAULT/token"
+            if not os.path.isfile(session_token_file):
+                print("Invalid Session Token File at "+session_token_file+". Please try again......Exiting !!")
                 exit(1)
+        '''
 
     region = config.get('Default', 'region').strip()
     if (region == ''):
@@ -340,12 +332,17 @@ try:
         #Use remote state if using devops
         remote_state='yes'
 
-        # OCI DevOps GIT User Details are mandatory while using instance_principal
-        if auth_mechanism == 'instance_principal':
+        # OCI DevOps GIT User and Key are mandatory while using instance_principal or session_token
+        if auth_mechanism == 'instance_principal' or auth_mechanism == 'session_token':
             if devops_user == "" or devops_user == "\n" or devops_user_key == "" or devops_user_key == "\n":
-                print("OCI DevOps GIT User Details cannot be left empty when using instance_principal...Exiting !!")
+                print("OCI DevOps GIT User and Key Details cannot be left empty when using instance_principal or session_token...Exiting !!")
                 exit(1)
 
+        '''if auth_mechanism == 'session_token':
+            if devops_user == "" or devops_user == "\n":
+                print("OCI DevOps GIT User cannot be left empty when using session_token...Exiting !!")
+                exit(1)
+        '''
         # Use same user and key as $user_ocid and $key_path for OCI Devops GIT operations
         if devops_user == '' or devops_user=="\n":
             devops_user = user
@@ -395,18 +392,18 @@ if (outdir_structure_file != '' and outdir_structure_file != "\n"):
             if value not in dir_values:
                 dir_values.append(str(value))
 
-        _outdir_structure_file = customer_tenancy_dir + "/" + prefix + "_outdir_structure_file"
+        _outdir_structure_file = customer_tenancy_dir + "/" + prefix + "_outdir_structure_file.properties"
         #if not os.path.exists(_outdir_structure_file):
         shutil.copyfile(outdir_structure_file, _outdir_structure_file)
     print("\nUsing different directories for OCI services as per the input outdir_structure_file..........")
 else:
     print("\nUsing single out directory for resources..........")
-
+    ################ Get service names here only ########################
 
 # 2. Move Private PEM key and Session Token file
 _session_token_file=''
 _key_path = ''
-if auth_mechanism=='api_key' or auth_mechanism=='session_token':
+if auth_mechanism=='api_key': # or auth_mechanism=='session_token':
     print("\nMoving Private Key File..........")
     # Move Private PEM Key File
     filename = os.path.basename(key_path)
@@ -416,41 +413,58 @@ if auth_mechanism=='api_key' or auth_mechanism=='session_token':
     os.chmod(_key_path,0o600)
 
     # Move Session Token File
+    '''
     if auth_mechanism == 'session_token':
         print("\nMoving Session Token File..........")
         filename = os.path.basename(session_token_file)
         shutil.copy(session_token_file,session_token_file+"_backup_"+ datetime.datetime.now().strftime("%d-%m-%H%M%S").replace('/', '-'))
         shutil.move(session_token_file, customer_tenancy_dir+"/"+filename)
         _session_token_file = customer_tenancy_dir + "/" + filename
-
+    '''
 # 3. Create config file
 #if not os.path.isfile(config_file_path):
 print("\nCreating Tenancy specific config.................")#, terraform provider , variables and properties files.................")
-file = open(config_file_path, "w")
+
 if auth_mechanism=='api_key':
+    file = open(config_file_path, "w")
     file.write("[DEFAULT]\n"
                "tenancy = "+tenancy+"\n"
                                     "fingerprint = "+fingerprint+"\n"
                                                                  "user = "+user+"\n"
                                                                                 "key_file = "+_key_path+"\n"
                                                                                                         "region = "+region+"\n")
-
+    file.close()
 elif auth_mechanism=='session_token':
+    '''
     file.write("[DEFAULT]\n"
                "tenancy = "+tenancy+"\n"
                                     "fingerprint = "+fingerprint+"\n"
                                                                  "security_token_file = "+_session_token_file+"\n"
-                                                                                                              "user = "+user+"\n"
-                                                                                                                             "key_file = "+_key_path+"\n"
-                                                                                                                                                     "region = "+region+"\n")
-    # Copy config file at home location also for TF to work with SSO token
-    shutil.copy(config_file_path, os.path.expanduser( '~' )+"/.oci")
+                                                                                                              "key_file = "+_key_path+"\n"
+                                                                                                                                                  "region = "+region+"\n")
+    '''
+    # move config file to customer specific directory and create symlink for TF execution
+    config_file_path_user_home = user_dir + "/.oci/config"
+    # To take care of multiple executions of createTenancyConfig,py
+    if not os.path.islink(config_file_path_user_home):
+        shutil.copy(config_file_path_user_home,config_file_path_user_home + "_backup_" + datetime.datetime.now().strftime("%d-%m-%H%M%S").replace('/', '-'))
+        shutil.move(config_file_path_user_home, config_file_path)
+        src = config_file_path
+        dst = config_file_path_user_home
+        try:
+            os.symlink(src,dst)
+        except FileExistsError as e:
+            os.unlink(dst)
+            os.symlink(src,dst)
+
 elif auth_mechanism=='instance_principal':
+    file = open(config_file_path, "w")
     file.write("[DEFAULT]\n"
                "tenancy = "+tenancy+"\n"
                                     "region = "+region+"\n")
+    file.close()
 
-file.close()
+
 tenancy_id=tenancy
 
 ## Authenticate
@@ -757,6 +771,7 @@ if use_devops == 'yes':
     repo_ssh_url = create_devops_resources(config, signer)
     devops_dir = terraform_files
     jenkins_home = os.environ['JENKINS_HOME']
+    git_config_file = customer_tenancy_dir + "/" + prefix + "_git_config"
 
     #Get Username from $user_ocid if $oci_devops_git_user is left empty
     if "ocid1.user.oc1" in devops_user:
@@ -767,45 +782,43 @@ if use_devops == 'yes':
         tenancy_data=identity_client.get_tenancy(tenancy_id=tenancy).data
         devops_user=user_data.name+"@"+tenancy_data.name
 
-    commit_id = update_devops_config(prefix, repo_ssh_url, dir_values, devops_user, devops_user_key, devops_dir, ct)
+    commit_id = update_devops_config(prefix,git_config_file, repo_ssh_url, dir_values, devops_user, devops_user_key, devops_dir, ct)
 
 del ct, config, signer
 # Logging information
-logging.basicConfig(filename=customer_tenancy_dir+'/cmds.log', format='%(message)s', filemode='w', level=logging.INFO)
+outfile = customer_tenancy_dir+'/createTenancyConfig.out'
+logging.basicConfig(filename=outfile, format='%(message)s', filemode='w', level=logging.INFO)
 
 print("==================================================================================================================================")
-print("\nThe toolkit has been setup to execute API's successfully. !!!\n")
+print("\nThe toolkit has been setup successfully. !!!\n")
 #print("Customer Specific Working Directory Path: "+customer_tenancy_dir)
 #print("Config File Path: "+ config_file_path )
 #print("Path to region based directories, terraform provider and the variables files: " + terraform_files)
 #print("\nPlease use "+prefix+"_setUpOCI.properties file at "+customer_tenancy_dir +" to proceed with the execution of the SetUpOCI script !!!!")
 #print("Update the path of CD3 Excel input file in "+customer_tenancy_dir + "/" +prefix+"_setUpOCI.properties before executing the next command......")
 #print("\nCommands to execute: (Alternately, you may also check the cmds.log in outdir for the same information)")
-logging.info("##############################")
-logging.info("Output Information")
-logging.info("##############################")
-logging.info("Customer Specific Working Directory Path: "+customer_tenancy_dir)
+logging.info("Customer Specific Working Directory Path: "+customer_tenancy_dir+"\n")
+
+if remote_state == 'yes':
+    logging.info("Remote State Bucket Name: "+ bucket_name+ " in "+rg+".")
+
 if use_devops == "yes":
     logging.info("Common Jenkins Home: " +jenkins_home)
     logging.info("DevOps Project Name and Repo Name: "+project_name+ ", "+repo_name+ " in "+rg+".")
     logging.info("Folder configured for OCI DevOps GIT: "+terraform_files+" Initial Commit ID from createTenancyConfig.py: "+commit_id)
-if remote_state == 'yes':
-    logging.info("Remote State Bucket Name: "+ bucket_name+ " in "+rg+".")
+    logging.info("\n#########################################")
+    logging.info("Next Steps for using toolkit via Jenkins")
+    logging.info("#########################################")
+    logging.info("Start Jenkins using  - /usr/share/jenkins/jenkins.sh &")
+    logging.info("Access Jenkins using - https://<IP Address of the machine hosting docker container>:8443")
 
-logging.info("\n##############################")
-logging.info("Commands to Execute")
-logging.info("##############################")
-if use_devops=='yes':
-    logging.info("Command to start Jenkins - ")
-    logging.info("/usr/share/jenkins/jenkins.sh &")
-    logging.info("Access Jenkins using https://<IP Address of the machine hosting docker container>:8443")
-
-logging.info("Commands via CLI - ")
+logging.info("\n######################################")
+logging.info("Next Steps for using toolkit via CLI")
+logging.info("######################################")
 logging.info("cd "+user_dir+"/oci_tools/cd3_automation_toolkit/")
-#print("python setUpOCI.py "+customer_tenancy_dir + "/" +prefix+"_setUpOCI.properties")
 logging.info("python setUpOCI.py "+customer_tenancy_dir + "/" +prefix+"_setUpOCI.properties")
 
-with open(customer_tenancy_dir + '/cmds.log', 'r') as log_file:
+with open(outfile, 'r') as log_file:
     data = log_file.read().rstrip()
 print(data)
 

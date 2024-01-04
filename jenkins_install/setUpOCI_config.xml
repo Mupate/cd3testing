@@ -345,7 +345,7 @@ pipeline {
             )
     }
     stages {
-		stage ('Validate Parameters') {
+		stage ('Validate Input Parameters') {
 		    steps {
         		script {
         		    if (ParametersValidation != "Passed"){
@@ -382,7 +382,7 @@ pipeline {
                     set +x
                     if [ "${Workflow}" == "Create Resources in OCI (Greenfield Workflow)" ]; then
                         workflow="create_resources"
-                    elif [ "${Workflow}" == "Export Resources from OCI (NonGreenfield Workflow)" ]; then
+                    elif [ "${Workflow}" == "Export Resources from OCI (Non-Greenfield Workflow)" ]; then
                         workflow="export_resources"
                     fi
                     if [ `grep '^workflow_type'  $prop_file` ] ; then

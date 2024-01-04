@@ -34,6 +34,7 @@ python -m pip install --user simplejson==3.18.3
 python -m pip install --user GitPython==3.1.40
 python -m pip install --user pyaml==6.0.1
 echo "export PYTHONPATH=${PYTHONPATH}:/root/.local/lib/python3.8/site-packages/:/cd3user/.local/lib/python3.8/site-packages/:/opt/rh/rh-python38/root/usr/lib/python3.8/site-packages/" >> /cd3user/.bashrc
+echo "PATH=$PATH:/cd3user/.local/bin" >> /cd3user/.bashrc
 source /cd3user/.bashrc
 
 
