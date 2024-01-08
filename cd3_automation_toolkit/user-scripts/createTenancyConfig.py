@@ -280,12 +280,12 @@ global commit_id
 global bucket_name
 global jenkins_home
 
-
-
 # Initialize Tenancy Variables
 customer_tenancy_dir = user_dir + "/tenancies/" + prefix
+config_files= user_dir + "/tenancies/" + prefix +"/.config_files"
+config_file_path = config_files + "/" + prefix + "_config"
+
 terraform_files = customer_tenancy_dir + "/terraform_files/"
-config_file_path = customer_tenancy_dir + "/" + prefix + "_config"
 setupoci_props_file_path = customer_tenancy_dir + "/" + prefix + "_setUpOCI.properties"
 
 # Read Config file Variables
@@ -393,6 +393,8 @@ except Exception as e:
 
 if not os.path.exists(customer_tenancy_dir):
     os.makedirs(customer_tenancy_dir)
+if not os.path.exists(config_files):
+    os.makedirs(config_files)
 dir_values = []
 
 # 1. Move outdir_structure_file
@@ -424,23 +426,14 @@ else:
 _session_token_file=''
 _key_path = ''
 if auth_mechanism=='api_key': # or auth_mechanism=='session_token':
-    print("\nMoving Private Key File..........")
+    print("\nCopying Private Key File..........")
     # Move Private PEM Key File
     filename = os.path.basename(key_path)
-    shutil.copy(key_path, key_path + "_backup_"+ datetime.datetime.now().strftime("%d-%m-%H%M%S").replace('/', '-'))
-    shutil.move(key_path, customer_tenancy_dir + "/" + filename)
-    _key_path = customer_tenancy_dir + "/" + filename
+    #shutil.copy(key_path, key_path + "_backup_"+ datetime.datetime.now().strftime("%d-%m-%H%M%S").replace('/', '-'))
+    shutil.copy(key_path, config_files + "/" + filename)
+    _key_path = config_files + "/" + filename
     os.chmod(_key_path,0o600)
 
-    # Move Session Token File
-    '''
-    if auth_mechanism == 'session_token':
-        print("\nMoving Session Token File..........")
-        filename = os.path.basename(session_token_file)
-        shutil.copy(session_token_file,session_token_file+"_backup_"+ datetime.datetime.now().strftime("%d-%m-%H%M%S").replace('/', '-'))
-        shutil.move(session_token_file, customer_tenancy_dir+"/"+filename)
-        _session_token_file = customer_tenancy_dir + "/" + filename
-    '''
 # 3. Create config file
 #if not os.path.isfile(config_file_path):
 print("\nCreating Tenancy specific config.................")#, terraform provider , variables and properties files.................")
@@ -500,7 +493,7 @@ global_backend_file_data = ""
 
 if remote_state == "yes":
     print("\nCreating Tenancy specific remote tfstate Items - bucket, aws credentials.................")
-    s3_credential_file_path = customer_tenancy_dir + "/" + prefix + "_s3_credentials"
+    s3_credential_file_path = config_files + "/" + prefix + "_s3_credentials"
     buckets_client = ObjectStorageClient(config=config,
                                          retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY,
                                          signer=signer)
@@ -797,7 +790,7 @@ if use_devops == 'yes':
     repo_ssh_url = create_devops_resources(config, signer)
     devops_dir = terraform_files
     jenkins_home = os.environ['JENKINS_HOME']
-    git_config_file = customer_tenancy_dir + "/" + prefix + "_git_config"
+    git_config_file = config_files + "/" + prefix + "_git_config"
 
     #Get Username from $user_ocid if $oci_devops_git_user is left empty
     if "ocid1.user.oc1" in devops_user:
