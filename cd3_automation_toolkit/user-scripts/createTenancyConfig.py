@@ -280,11 +280,7 @@ global commit_id
 global bucket_name
 global jenkins_home
 
-# Read Config file Variable
-prefix = config.get('Default', 'customer_name').strip()
-if prefix == "" or prefix == "\n":
-    print("Invalid Prefix. Please try again......Exiting !!")
-    exit(1)
+
 
 # Initialize Tenancy Variables
 customer_tenancy_dir = user_dir + "/tenancies/" + prefix
@@ -294,11 +290,16 @@ setupoci_props_file_path = customer_tenancy_dir + "/" + prefix + "_setUpOCI.prop
 
 # Read Config file Variables
 try:
-    tenancy = config.get('Default', 'tenancy_ocid').strip()
     user=''
     _key_path=''
     fingerprint=''
 
+    prefix = config.get('Default', 'customer_name').strip()
+    if prefix == "" or prefix == "\n":
+        print("Invalid Customer Name. Please try again......Exiting !!")
+        exit(1)
+
+    tenancy = config.get('Default', 'tenancy_ocid').strip()
     if tenancy == "" or tenancy == "\n":
         print("Tenancy ID cannot be left empty...Exiting !!")
         exit(1)
@@ -308,7 +309,13 @@ try:
         print("Auth Mechanism cannot be left empty...Exiting !!")
         exit(1)
 
-    if auth_mechanism == 'api_key':# or auth_mechanism == 'session_token':
+    region = config.get('Default', 'region').strip()
+    if region == "" or region == "\n":
+        print("Region cannot be left empty...Exiting !!")
+        exit(1)
+    rg=region
+
+    if auth_mechanism == 'api_key':
         print("=================================================================")
         print("NOTE: Make sure the API Public Key is added to the OCI Console!!!")
         print("=================================================================")
@@ -329,22 +336,6 @@ try:
         if user == "" or user == "\n":
             print("user_ocid cannot be left empty...Exiting !!")
             exit(1)
-
-        # security_token_file madatory for session_token
-        '''
-        if auth_mechanism == 'session_token':
-            session_token_file = config.get('Default', 'security_token_file').strip()
-            if session_token_file == "" or session_token_file == "\n":
-                session_token_file = "/cd3user/.oci/sessions/DEFAULT/token"
-            if not os.path.isfile(session_token_file):
-                print("Invalid Session Token File at "+session_token_file+". Please try again......Exiting !!")
-                exit(1)
-        '''
-
-    region = config.get('Default', 'region').strip()
-    if (region == ''):
-        region = "us-ashburn-1"
-    rg=region
 
     outdir_structure_file = config.get('Default', 'outdir_structure_file').strip()
     ssh_public_key = config.get('Default', 'ssh_public_key').strip()
@@ -535,12 +526,18 @@ if remote_state == "yes":
             remote_state_user = user_data[0].id
 
         # check if credential exists
+        key_exists = False
         list_customer_secret_key_response = identity_client.list_customer_secret_keys(user_id=remote_state_user).data
         for keys in list_customer_secret_key_response:
             if keys.display_name == cred_name:
+                key_exists = True
                 print("Another Customer secret key exists with same name. Deleting existing key and creating new key...")
                 customer_secret_key_id = keys.id
                 identity_client.delete_customer_secret_key(user_id=remote_state_user,customer_secret_key_id=customer_secret_key_id)
+
+        if (len(list_customer_secret_key_response) > 1) and not key_exists:
+            print("\n**ERROR** User ("+ remote_state_user +") already has max customer secret keys created. Please clear the existing keys or use different user")
+            exit(1)
         create_customer_secret_key_response = identity_client.create_customer_secret_key(
             create_customer_secret_key_details=oci.identity.models.CreateCustomerSecretKeyDetails(
                 display_name=cred_name),

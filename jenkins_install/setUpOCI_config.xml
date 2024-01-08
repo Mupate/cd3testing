@@ -27,7 +27,7 @@
       <parameterDefinitions>
         <io.jenkins.plugins.file__parameters.StashedFileParameterDefinition plugin="file-parameters@316.va_83a_1221db_a_7">
           <name>Excel_Template</name>
-          <description>Upload CD3 template file.
+          <description>Upload input Excel file.
 Previously uploaded file will be used if left empty.</description>
         </io.jenkins.plugins.file__parameters.StashedFileParameterDefinition>
         <org.biouno.unochoice.ChoiceParameter plugin="uno-choice@2.8.1">
@@ -282,7 +282,7 @@ pipeline {
     parameters {
         stashedFile (
             name: 'Excel_Template',
-            description: "Upload CD3 template file.\nPreviously uploaded file will be used if left empty."
+            description: "Upload input Excel file.\nPreviously uploaded file will be used if left empty."
             )
     }
     stages {
@@ -293,12 +293,13 @@ pipeline {
                     script {
                             exlfile_check = sh(script: '''
                                 set +x
-                                size=$(wc --bytes &lt; "$Excel_Template")
-                                if [[ ( $size -gt 300000 ) || ( $Excel_Template_FILENAME != *.xlsx ) ]]; then
-                                    echo "Failed"
+                                if [[ -n "$Excel_Template_FILENAME" ]];then
+                                    size=$(wc --bytes &lt; "$Excel_Template")
+                                    if [[ ( $size -gt 300000 ) || ( $Excel_Template_FILENAME != *.xlsx ) ]]; then
+                                        echo "Failed"
+                                    fi
                                 fi
                                 ''' , returnStdout: true).trim()
-                            println (exlfile_check)
                             if ("${exlfile_check}".contains("Failed")) {
                                 mitem = "excel template"
                                 file_check = "Failed"
@@ -315,6 +316,7 @@ pipeline {
 
             		}else {
             		    unstable(message:"Input Parameter Validation Failed. Setting Build to Unstable")
+                        ParametersValidation = "Failed"
                     }
     		    }
         	}

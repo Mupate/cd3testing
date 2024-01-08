@@ -53,7 +53,7 @@ def non_gf_options_map = [
 		}
       if (sitem == 'Upload current terraform files/state to Resource Manager') {
       	orm_comp = AdditionalFilters.split("orm_compartments=\\[,")[1]
-		if (orm_comp.startsWithAny(",", " ","")) {
+		if (orm_comp.startsWithAny(",", " ")) {
         	valid_params = "Failed"
             println("Failed - ${sitem}")
         }else {

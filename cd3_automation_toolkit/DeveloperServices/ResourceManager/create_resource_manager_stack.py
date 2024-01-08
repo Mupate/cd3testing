@@ -181,10 +181,15 @@ def create_resource_manager(outdir,var_file, outdir_struct,prefix,auth_mechanism
                 except FileNotFoundError as e:
                     pass
 
+    if ct.orm_comp_filter == "null":
+        comp_name = None
+    else:
+        comp_name = ct.orm_comp_filter if ct.orm_comp_filter else input(
+            "Enter Resource Manager Compartment Name : ")
+
     #3. Read existing rm_ocids.csv file and get the data in map;
     for region in regions:
         rm_ocids_file = outdir+'/'+region+'/rm_ocids.csv'
-        comp_name = ''
         if os.path.exists(rm_ocids_file):
             with open(rm_ocids_file) as csv_file:
                 csv_reader = csv.reader(csv_file, delimiter=';')
@@ -200,12 +205,9 @@ def create_resource_manager(outdir,var_file, outdir_struct,prefix,auth_mechanism
                 #put comp name of last stack in the variable
                 comp_name = rm_comp_name
         else:
-            if ct.orm_comp_filter == "null":
-                    comp_name = None
-            else:
-                comp_name = ct.orm_comp_filter if ct.orm_comp_filter else input("Enter Resource Manager Compartment Name for "+region +" region: ")
+            comp_name = comp_name
 
-            #comp_name = input("Enter Resource Manager Compartment Name for "+region +" region: ")
+            #comp_name= input("Enter Resource Manager Compartment Name for "+region +" region: ")
 
         try:
             comp_id = ct.ntk_compartment_ids[comp_name]
