@@ -189,13 +189,42 @@ def update_devops_config(prefix,git_config_file, repo_ssh_url,dir_values,devops_
     # Setup a local tracking branch of a remote branch
     local_repo.create_head("main", origin.refs.main)  # create local branch "main" from remote "main"
     local_repo.heads.main.set_tracking_branch(origin.refs.main)  # set local "main" to track remote "main"
-    local_repo.heads.main.checkout()  # checkout local "main" to working tree
+    local_repo_files = glob.glob(devops_dir + '*')
+    local_repo_files.extend(glob.glob(devops_dir + '.*'))
+    if local_repo.git.status("--porcelain"):
+        repo_changes = input(
+            "There are conflicting changes , which changes you want to retain? Enter local or remote, default is local : ")
+        if ("remote" in repo_changes.lower()):
+            for item in [f for f in local_repo_files if not f.endswith(".git")]:
+                if os.path.isfile(item):
+                    os.remove(item)
+                else:
+                    dir_util.remove_tree(item)
+            local_repo.heads.main.checkout()  # checkout local "main" to working tree
+        else:
+            tmp_dir = customer_tenancy_dir+"/tmp_repo"
+            if os.path.exists(tmp_dir):
+                dir_util.remove_tree(tmp_dir)
+                os.mkdir(tmp_dir)
+            for item in [f for f in local_repo_files if not f.endswith(".git")]:
+                shutil.move(item, tmp_dir)
+            local_repo.heads.main.checkout()
+            temp_repo_files = glob.glob(tmp_dir + '/*')
+            temp_repo_files.extend(glob.glob(tmp_dir + '/.*'))
+            for item in [f for f in temp_repo_files if not f.endswith(".git")]:
+                item = item.split("/")[-1]
+                if os.path.isfile(tmp_dir+"/"+item):
+                    shutil.copy(tmp_dir+"/"+item, devops_dir+item)
+                else:
+                    dir_util.copy_tree(tmp_dir+"/"+item,devops_dir+item)
+
+            for f in glob.glob(os.environ['JENKINS_INSTALL'] + "/*.groovy"):
+                shutil.copy2(f, devops_dir)
+
+            dir_util.remove_tree(tmp_dir)
+
     local_repo.config_writer().set_value("user", "name", devops_user).release()
     local_repo.config_writer().set_value("user", "email", devops_user).release()
-
-    for f in glob.glob(os.environ['JENKINS_INSTALL'] + "/*.groovy"):
-        shutil.copy2(f, devops_dir + "/")
-
     #shutil.copy(os.environ['JENKINS_INSTALL'] + "/singleOutput.groovy", devops_dir + "/singleOutput.groovy")
     local_repo.git.add('--all')
     commit_id='None'

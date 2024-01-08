@@ -18,9 +18,7 @@ cp ${JENKINS_INSTALL}/setUpOCI_config.xml "$JENKINS_HOME/jobs/setUpOCI/config.xm
 cp -r ${JENKINS_INSTALL}/scriptler $JENKINS_HOME
 
 #Generate Self Signed Cert and Copy to JENKINS_HOME
-keytool -genkey -keystore "oci_toolkit.jks" -alias "automationtoolkit" -keyalg RSA -validity 60 -keysize 2048 -dname "CN=oci-automation, OU=toolkit, C=IN" -ext SAN=dns:automationtoolkit,ip:127.0.0.1 -storepass automationtoolkit && keytool -importkeystore -srckeystore oci_toolkit.jks -srcstoretype JKS -deststoretype PKCS12 -destkeystore oci_toolkit.p12 -srcstorepass automationtoolkit -deststorepass automationtoolkit
-cp oci_toolkit.p12 $JENKINS_HOME
-
+ keytool -genkey -keystore "$JENKINS_INSTALL/oci_toolkit.jks" -alias "automationtoolkit" -keyalg RSA -validity 60 -keysize 2048 -dname "CN=oci-automation, OU=toolkit, C=IN" -ext SAN=dns:automationtoolkit,ip:127.0.0.1 -storepass automationtoolkit && keytool -importkeystore -srckeystore "$JENKINS_INSTALL/oci_toolkit.jks" -srcstoretype JKS -deststoretype PKCS12 -destkeystore "$JENKINS_HOME/oci_toolkit.p12" -srcstorepass automationtoolkit -deststorepass automationtoolkit -noprompt
 
 touch "${COPY_REFERENCE_FILE_LOG}" || { echo "Can not write to ${COPY_REFERENCE_FILE_LOG}. Wrong volume permissions?"; exit 1; }
 echo "--- Copying files at $(date)" >> "$COPY_REFERENCE_FILE_LOG"
@@ -54,7 +52,7 @@ if [[ $# -lt 1 ]] || [[ "$1" == "--"* ]]; then
   done < <([[ $JENKINS_OPTS ]] && xargs printf '%s\0' <<<"$JENKINS_OPTS")
 
   # Start Jenkins on 8443 port using Self Signed Cert
-  exec java -Duser.home="$JENKINS_HOME" "${java_opts_array[@]}" -jar ${JENKINS_INSTALL}/jenkins.war "${jenkins_opts_array[@]}" "$@" --httpsPort=8443 --httpPort=-1 --httpsKeyStore="oci_toolkit.jks" --httpsKeyStorePassword=automationtoolkit
+  exec java -Duser.home="$JENKINS_HOME" "${java_opts_array[@]}" -jar ${JENKINS_INSTALL}/jenkins.war "${jenkins_opts_array[@]}" "$@" --httpsPort=8443 --httpPort=-1 --httpsKeyStore="$JENKINS_INSTALL/oci_toolkit.jks" --httpsKeyStorePassword=automationtoolkit
 fi
 
 # As argument is not jenkins, assume user want to run his own process, for example a `bash` shell to explore this image

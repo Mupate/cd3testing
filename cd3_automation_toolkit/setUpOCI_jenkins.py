@@ -1096,7 +1096,7 @@ exec_start_time = datetime.datetime.now()
 
 ## Menu Options
 if non_gf_tenancy:
-    print("\nnon_gf_tenancy in properties file is set to true..Export existing OCI objects and Synch with TF state")
+    print("\nworkflow_type set to export_resources. Export existing OCI objects and Synch with TF state")
     print("We recommend to not have any existing tfvars/tfstate files for export out directory")
     export_regions = get_region_list(rm=False)
     for option in main_options:

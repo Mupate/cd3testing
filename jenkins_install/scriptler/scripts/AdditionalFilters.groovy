@@ -8,6 +8,7 @@ html_to_be_rendered = """
    <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"reg_filter=[\"></td>
     <td><label title=\"service1-label\" class=\" \">Region Filter : </label></td>
     <td><input type=\"text\" class=\" \" name=\"value\" > </br></td>
+    <td>(Leave empty for all subscribed regions) </td>
    <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"]@\"></td>
 
     </tr>
@@ -16,6 +17,7 @@ html_to_be_rendered = """
    <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"comp_filter=[\"></td>
     <td><label title=\"service1-label\" class=\" \">Compartment Filter : </label></td>
     <td><input type=\"text\" class=\" \" name=\"value\" > </br></td>
+    <td>(Leave empty to fetch from all compartments)</td>
    <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"]@\"></td>
     </tr>
 
