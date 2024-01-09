@@ -1,5 +1,4 @@
 /*This line will be removed when using remote state
-# Uncomment and update to use Object Storage Bucket as the backend
 # !!! WARNING !!! Terraform State Lock is not supported with OCI Object Storage.
 # Pre-Requisite: Create a version enabled object storage bucket to store the state file.
 # End Point Format: https://<namespace>.compat.objectstorage.<region>.oraclecloud.com

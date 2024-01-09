@@ -10,7 +10,8 @@ RUN yum install sudo -y && groupadd --gid $USER_GID $USERNAME \
 && useradd --uid $USER_UID --gid $USER_GID -d /$USERNAME -m $USERNAME \
 && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
 && chmod 0440 /etc/sudoers.d/$USERNAME \
-&& mkdir -p /cd3user/tenancies && sudo chown -R $USERNAME:$USERNAME /cd3user/tenancies/
+&& mkdir -p /cd3user/tenancies && sudo chown -R $USERNAME:$USERNAME /cd3user/tenancies/ \
+&& yum install -y vim && echo 'alias vi="vim"' >> /etc/bashrc
 
 
 USER $USERNAME

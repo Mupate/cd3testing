@@ -25,6 +25,16 @@ sys.path.append(os.getcwd()+"/..")
 from commonTools import *
 from copy import deepcopy
 
+global topic_name
+global project_name
+global repo_name
+global devops_exists
+global devops_repo
+global commit_id
+global bucket_name
+global jenkins_home
+
+
 def paginate(operation, *args, **kwargs):
     while True:
         response = operation(*args, **kwargs)
@@ -35,35 +45,35 @@ def paginate(operation, *args, **kwargs):
             break
 
 def create_devops_resources(config,signer):
+    resource_search = oci.resource_search.ResourceSearchClient(config, retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY,
+                                                               signer=signer)
+    if not devops_exists:
+        # Check existence of Topic
+        toolkit_topic_id = ''
+        ons_query = 'query onstopic resources where displayname = \''+topic_name+'\''
+        ons_search_details = oci.resource_search.models.StructuredSearchDetails(type='Structured',
+                                                                                query=ons_query)
+        ons_resources = oci.pagination.list_call_get_all_results(resource_search.search_resources, ons_search_details,
+                                                                 limit=1000)
+        for ons in ons_resources.data:
+            topic_state = ons.lifecycle_state
+            if topic_state != 'ACTIVE':
+                print("Topic exists with name(" + topic_name + ") but is not in ACTIVE state. Exiting...")
+                exit(1)
+            toolkit_topic_id = ons.identifier
+            topic_comp = ons.compartment_id
+            print("Topic exists with name(" + topic_name + ") in compartment '"+topic_comp+"' Reusing same.")
 
-    # Check existence of Topic
-    toolkit_topic_id = ''
-    resource_search = oci.resource_search.ResourceSearchClient(config, retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY,signer=signer)
-    ons_query = 'query onstopic resources where displayname = \''+topic_name+'\''
-    ons_search_details = oci.resource_search.models.StructuredSearchDetails(type='Structured',
-                                                                            query=ons_query)
-    ons_resources = oci.pagination.list_call_get_all_results(resource_search.search_resources, ons_search_details,
-                                                             limit=1000)
-    for ons in ons_resources.data:
-        topic_state = ons.lifecycle_state
-        if topic_state != 'ACTIVE':
-            print("Topic exists with name(" + topic_name + ") but is not in ACTIVE state. Exiting...")
-            exit(1)
-        toolkit_topic_id = ons.identifier
-        topic_comp = ons.compartment_id
-        print("Topic exists with name(" + topic_name + ") in compartment '"+topic_comp+"' Reusing same.")
+        # Create New Topic
+        if toolkit_topic_id=='':
+            # Initialize ONS service client with default config file
+            ons_client = oci.ons.NotificationControlPlaneClient(config=config,
+                                                                retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY,
+                                                                signer=signer)
 
-    # Create New Topic
-    if toolkit_topic_id=='':
-        # Initialize ONS service client with default config file
-        ons_client = oci.ons.NotificationControlPlaneClient(config=config,
-                                                            retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY,
-                                                            signer=signer)
-
-        create_topic_response = ons_client.create_topic(create_topic_details=oci.ons.models.CreateTopicDetails(
-                name=topic_name, compartment_id=compartment_ocid, description="Created by Automation ToolKit")).data
-        toolkit_topic_id = create_topic_response.topic_id
-
+            create_topic_response = ons_client.create_topic(create_topic_details=oci.ons.models.CreateTopicDetails(
+                    name=topic_name, compartment_id=compartment_ocid, description="Created by Automation ToolKit")).data
+            toolkit_topic_id = create_topic_response.topic_id
 
 
     # Check existence of DevOps Project
@@ -102,11 +112,11 @@ def create_devops_resources(config,signer):
     if list_repository_response.items:
         for item in list_repository_response.items:
             repo_state = item.lifecycle_state
+            repo_id = item.id
         if repo_state != "ACTIVE":
             print("Repository exists with name("+repo_name+") but is not in ACTIVE state. Please retry with different customer_name. Exiting...")
             exit(1)
         else:
-            toolkit_project_id = item.id
             repo_url = item.ssh_url
             print("Repository exists with name("+repo_name+") and is in ACTIVE state. Reusing same.")
 
@@ -120,14 +130,17 @@ def create_devops_resources(config,signer):
                 repository_type="HOSTED",
                 description="Created by Automation ToolKit")).data
         repo_url = create_repository_response.ssh_url
+        repo_id = create_repository_response.id
         print("Waiting for repository ("+repo_name+") to be in ACTIVE state.")
         while repo_state != "ACTIVE":
-            devops_repo = devops_client.get_repository(repository_id=create_repository_response.id).data
-            repo_state = devops_repo.lifecycle_state
-    return repo_url
+            repo_data = devops_client.get_repository(repository_id=repo_id).data
+            repo_state = repo_data.lifecycle_state
+    list_paths_response = devops_client.list_paths(repository_id=repo_id)
+    files_in_repo = len(list_paths_response.data.items)
+    return repo_url,files_in_repo
 
 
-def update_devops_config(prefix,git_config_file, repo_ssh_url,dir_values,devops_user,devops_user_key,devops_dir,ct):
+def update_devops_config(prefix,git_config_file, repo_ssh_url,files_in_repo,dir_values,devops_user,devops_user_key,devops_dir,ct):
     # create git config file
     file = open(git_config_file, "w")
     file.write("Host devops.scmservice.*.oci.oraclecloud.com\n "
@@ -173,7 +186,9 @@ def update_devops_config(prefix,git_config_file, repo_ssh_url,dir_values,devops_
     cfg["jenkins"]["globalNodeProperties"] = [{'envVars': {'env': [{'key': 'customer_prefix', 'value': prefix}]}}]
     with open(yaml_file_path, "w") as yaml_file:
         cfg = yaml.dump(cfg, stream=yaml_file, default_flow_style=False, sort_keys=False)
-
+    # Clean repo config if exists and initiate git repo
+    #if os.path.exists(devops_dir +".git"):
+    #    dir_util.remove_tree(devops_dir +".git")
     local_repo = git.Repo.init(devops_dir)
     f = open(devops_dir + ".gitignore", "w")
     git_ignore_file_data = ".DS_Store\n*tfstate*\n*terraform*\ntfplan.out\ntfplan.json\n*backup*\ntf_import_commands*\n*cis_report*\n*.safe\n*stacks.zip"
@@ -191,24 +206,27 @@ def update_devops_config(prefix,git_config_file, repo_ssh_url,dir_values,devops_
     local_repo.heads.main.set_tracking_branch(origin.refs.main)  # set local "main" to track remote "main"
     local_repo_files = glob.glob(devops_dir + '*')
     local_repo_files.extend(glob.glob(devops_dir + '.*'))
-    if local_repo.git.status("--porcelain"):
+    if local_repo.git.status("--porcelain") and files_in_repo > 0:
         repo_changes = input(
-            "There are conflicting changes , which changes you want to retain? Enter local or remote, default is local : ")
+            "local and remote repos are not empty, which changes you want to retain? Enter local or remote, default is local : ")
         if ("remote" in repo_changes.lower()):
+            local_repo.git.stash()
+        else:
+            tmp_dir = customer_tenancy_dir+"/tmp_repo"
+            if os.path.exists(tmp_dir):
+                dir_util.remove_tree(tmp_dir)
+            os.mkdir(tmp_dir)
+            for item in [f for f in local_repo_files if not f.endswith(".git")]:
+                shutil.move(item, tmp_dir+"/")
+            local_repo.heads.main.checkout()
+            local_repo.git.pull()
+            local_repo_files = glob.glob(devops_dir + '*')
+            local_repo_files.extend(glob.glob(devops_dir + '.*'))
             for item in [f for f in local_repo_files if not f.endswith(".git")]:
                 if os.path.isfile(item):
                     os.remove(item)
                 else:
                     dir_util.remove_tree(item)
-            local_repo.heads.main.checkout()  # checkout local "main" to working tree
-        else:
-            tmp_dir = customer_tenancy_dir+"/tmp_repo"
-            if os.path.exists(tmp_dir):
-                dir_util.remove_tree(tmp_dir)
-                os.mkdir(tmp_dir)
-            for item in [f for f in local_repo_files if not f.endswith(".git")]:
-                shutil.move(item, tmp_dir)
-            local_repo.heads.main.checkout()
             temp_repo_files = glob.glob(tmp_dir + '/*')
             temp_repo_files.extend(glob.glob(tmp_dir + '/.*'))
             for item in [f for f in temp_repo_files if not f.endswith(".git")]:
@@ -223,8 +241,12 @@ def update_devops_config(prefix,git_config_file, repo_ssh_url,dir_values,devops_
 
             dir_util.remove_tree(tmp_dir)
 
+    else:
+        local_repo.heads.main.checkout()
     local_repo.config_writer().set_value("user", "name", devops_user).release()
     local_repo.config_writer().set_value("user", "email", devops_user).release()
+    for f in glob.glob(os.environ['JENKINS_INSTALL'] + "/*.groovy"):
+        shutil.copy2(f, devops_dir)
     #shutil.copy(os.environ['JENKINS_INSTALL'] + "/singleOutput.groovy", devops_dir + "/singleOutput.groovy")
     local_repo.git.add('--all')
     commit_id='None'
@@ -273,17 +295,15 @@ variables_example_file = modules_dir + "/variables_example.tf"
 setupoci_props_toolkit_file_path = toolkit_dir + "/setUpOCI.properties"
 jenkins_dir = os.environ['JENKINS_INSTALL']
 
-global topic_name
-global project_name
-global repo_name
-global commit_id
-global bucket_name
-global jenkins_home
+prefix = config.get('Default', 'customer_name').strip()
+if prefix == "" or prefix == "\n":
+    print("Invalid Customer Name. Please try again......Exiting !!")
+    exit(1)
 
 # Initialize Tenancy Variables
 customer_tenancy_dir = user_dir + "/tenancies/" + prefix
 config_files= user_dir + "/tenancies/" + prefix +"/.config_files"
-config_file_path = config_files + "/" + prefix + "_config"
+config_file_path = config_files + "/" + prefix + "_oci_config"
 
 terraform_files = customer_tenancy_dir + "/terraform_files/"
 setupoci_props_file_path = customer_tenancy_dir + "/" + prefix + "_setUpOCI.properties"
@@ -293,11 +313,6 @@ try:
     user=''
     _key_path=''
     fingerprint=''
-
-    prefix = config.get('Default', 'customer_name').strip()
-    if prefix == "" or prefix == "\n":
-        print("Invalid Customer Name. Please try again......Exiting !!")
-        exit(1)
 
     tenancy = config.get('Default', 'tenancy_ocid').strip()
     if tenancy == "" or tenancy == "\n":
@@ -345,6 +360,7 @@ try:
     remote_state_bucket = config.get('Default', 'remote_state_bucket_name').strip()
 
     use_devops = config.get('Default', 'use_oci_devops_git').strip().strip().lower()
+    devops_repo = config.get('Default', 'oci_devops_git_repo_name').strip().strip()
     devops_user = config.get('Default', 'oci_devops_git_user').strip()
     devops_user_key = config.get('Default', 'oci_devops_git_key').strip()
 
@@ -367,7 +383,7 @@ try:
         if devops_user == '' or devops_user=="\n":
             devops_user = user
         if devops_user_key == '' or devops_user_key=="\n":
-            devops_user_key = customer_tenancy_dir+"/"+os.path.basename(key_path)
+            devops_user_key = config_files+"/"+os.path.basename(key_path)
 
 
     if remote_state == 'yes':
@@ -529,7 +545,7 @@ if remote_state == "yes":
                 identity_client.delete_customer_secret_key(user_id=remote_state_user,customer_secret_key_id=customer_secret_key_id)
 
         if (len(list_customer_secret_key_response) > 1) and not key_exists:
-            print("\n**ERROR** User ("+ remote_state_user +") already has max customer secret keys created. Please clear the existing keys or use different user")
+            print("\nUser ("+ remote_state_user +") already has max customer secret keys created. Cannot create a new one to be used with toolkit for tfstate remote management.  Please clear the existing keys or use different user. Existing...")
             exit(1)
         create_customer_secret_key_response = identity_client.create_customer_secret_key(
             create_customer_secret_key_details=oci.identity.models.CreateCustomerSecretKeyDetails(
@@ -783,11 +799,19 @@ for region in ct.all_regions:
 # 9. Update DevOps files and configurations
 if use_devops == 'yes':
     print("\nCreating Tenancy specific DevOps Items - Topic, Project and Repository.................")
-    topic_name = prefix + "-automation-toolkit-topic"
-    project_name = prefix + "-automation-toolkit-project"
-    repo_name = prefix + "-automation-toolkit-repo"
 
-    repo_ssh_url = create_devops_resources(config, signer)
+    if devops_repo == '' or devops_repo == "\n":
+        topic_name = prefix + "-automation-toolkit-topic"
+        project_name = prefix + "-automation-toolkit-project"
+        repo_name = prefix + "-automation-toolkit-repo"
+        devops_exists = False
+    else:
+        topic_name = ''
+        project_name = devops_repo.split("/")[0]
+        repo_name = devops_repo.split("/")[1]
+        devops_exists = True
+
+    repo_ssh_url,files_in_repo = create_devops_resources(config, signer)
     devops_dir = terraform_files
     jenkins_home = os.environ['JENKINS_HOME']
     git_config_file = config_files + "/" + prefix + "_git_config"
@@ -801,7 +825,7 @@ if use_devops == 'yes':
         tenancy_data=identity_client.get_tenancy(tenancy_id=tenancy).data
         devops_user=user_data.name+"@"+tenancy_data.name
 
-    commit_id = update_devops_config(prefix,git_config_file, repo_ssh_url, dir_values, devops_user, devops_user_key, devops_dir, ct)
+    commit_id = update_devops_config(prefix,git_config_file, repo_ssh_url,files_in_repo, dir_values, devops_user, devops_user_key, devops_dir, ct)
 
 del ct, config, signer
 # Logging information

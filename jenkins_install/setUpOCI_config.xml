@@ -373,7 +373,7 @@ pipeline {
         stage ('Run Import Commands') {
             when {
 				allOf {
-				    expression {return "${Workflow}" == "Export Resources from OCI (NonGreenfield Workflow)"}
+				    expression {return "${Workflow}" == "Export Resources from OCI (Non-Greenfield Workflow)"}
 				    expression {return ParametersValidation == "Passed" }
 				}
             }

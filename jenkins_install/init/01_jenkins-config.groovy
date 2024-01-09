@@ -30,15 +30,15 @@ for (os in outdir_structure) {
         def ost = jenkins.getItem("terraform_files")
         if (ost == null) {
                 ost = jenkins.createProject(Folder.class,"terraform_files")
-               }
+               
 	def global = ost.getItem("global")
 	if (global == null) {
 		global = ost.createProject(Folder.class, "global")
-		}
+		
 	def rpc = global.getItem("rpc")
 	if (rpc == null) {
 		rpc = global.createProject(Folder.class, "rpc")
-		}
+		
 	def tfGlobRpcXml =
 """\
 <flow-definition>
@@ -99,7 +99,8 @@ for (os in outdir_structure) {
                                                 def tfGlobRpcDestroyXmlStream = new ByteArrayInputStream(tfGlobRpcDestroyXml.getBytes())
                                                 job2 = rpc.createProjectFromXML(tfDestroyJobName, tfGlobRpcDestroyXmlStream)
 			
-			
+	}	
+}	
 		
         for (reg in regions) {
                 def folder = ost.getItem(reg)
@@ -237,4 +238,6 @@ for (os in outdir_structure) {
                         }
                 }
         }
+    }
+
 }
