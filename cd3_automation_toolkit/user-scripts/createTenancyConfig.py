@@ -204,13 +204,25 @@ def update_devops_config(prefix,git_config_file, repo_ssh_url,files_in_repo,dir_
     # Setup a local tracking branch of a remote branch
     local_repo.create_head("main", origin.refs.main)  # create local branch "main" from remote "main"
     local_repo.heads.main.set_tracking_branch(origin.refs.main)  # set local "main" to track remote "main"
-    local_repo_files = glob.glob(devops_dir + '*')
+    local_repo_files = glob.glob(devops_dir+'*')
     local_repo_files.extend(glob.glob(devops_dir + '.*'))
     if local_repo.git.status("--porcelain") and files_in_repo > 0:
-        repo_changes = input(
-            "local and remote repos are not empty, which changes you want to retain? Enter local or remote, default is local : ")
-        if ("remote" in repo_changes.lower()):
-            local_repo.git.stash()
+        repo_changes = input("\nData in local terraform_files and repo is not same, which changes you want to retain? Enter local or repo, default is local : ")
+        if ("repo" in repo_changes.lower()):
+            dir_util.remove_tree(terraform_files)
+            os.makedirs(terraform_files)
+            local_repo = git.Repo.init(devops_dir)
+            existing_remote = local_repo.git.remote()
+            if existing_remote == "origin":
+                local_repo.delete_remote("origin")
+            origin = local_repo.create_remote("origin", repo_ssh_url)
+            assert origin.exists()
+            assert origin == local_repo.remotes.origin == local_repo.remotes["origin"]
+            origin.fetch()  # assure we actually have data. fetch() returns useful information
+            # Setup a local tracking branch of a remote branch
+            local_repo.create_head("main", origin.refs.main)  # create local branch "main" from remote "main"
+            local_repo.heads.main.set_tracking_branch(origin.refs.main)
+            local_repo.heads.main.checkout()
         else:
             tmp_dir = customer_tenancy_dir+"/tmp_repo"
             if os.path.exists(tmp_dir):

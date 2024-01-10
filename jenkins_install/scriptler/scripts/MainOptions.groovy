@@ -1,4 +1,4 @@
-if (Workflow.equals("Create Resources in OCI (Greenfield Workflow)")){
+if (Workflow.toLowerCase().contains("create")){
 return[
 "Validate CD3",
 "Identity",
@@ -17,7 +17,7 @@ return[
 "CD3 Services"
 ]
 }
-else if(Workflow.equals("Export Resources from OCI (NonGreenfield Workflow)")) {
+else if(Workflow.toLowerCase().contains("export")) {
 return[
 "Export Identity",
 "Export Tags",

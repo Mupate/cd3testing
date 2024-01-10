@@ -36,7 +36,7 @@ def non_gf_options_map = [
     	continue
 	}
  	for (sitem in SubOptions.split(",")) {
-		if (Workflow.equals("Create Resources in OCI (Greenfield Workflow)")){
+		if (Workflow.toLowerCase().contains("create")){
 			if (sitem in gf_options_map[mitem]) {
 				valid_params = "Passed"
 			}else {

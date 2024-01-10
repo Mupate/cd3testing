@@ -1,6 +1,6 @@
 html_to_be_rendered = "<table><tr>"
 
-if(Workflow.equals("Export Resources from OCI (NonGreenfield Workflow)")){
+if(Workflow.toLowerCase().contains("export")){
 
 html_to_be_rendered = """
     ${html_to_be_rendered}

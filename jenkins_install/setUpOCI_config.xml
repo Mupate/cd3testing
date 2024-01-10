@@ -344,9 +344,9 @@ pipeline {
                 }
                 sh '''
                     set +x
-                    if [ "${Workflow}" == "Create Resources in OCI (Greenfield Workflow)" ]; then
+                    if grep -q "Create" &lt;&lt;&lt; "${Workflow}"; then
                         workflow="create_resources"
-                    elif [ "${Workflow}" == "Export Resources from OCI (Non-Greenfield Workflow)" ]; then
+                    elif grep -q "Export" &lt;&lt;&lt; "${Workflow}"; then
                         workflow="export_resources"
                     fi
                     if [ `grep '^workflow_type'  $prop_file` ] ; then
@@ -373,7 +373,7 @@ pipeline {
         stage ('Run Import Commands') {
             when {
 				allOf {
-				    expression {return "${Workflow}" == "Export Resources from OCI (Non-Greenfield Workflow)"}
+				    expression {return "${Workflow}".toLowerCase().contains("export")}
 				    expression {return ParametersValidation == "Passed" }
 				}
             }
