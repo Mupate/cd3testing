@@ -265,8 +265,9 @@ def export_network(options=[]):
     print("=====================================================================================================================")
     print("NOTE: Make sure to execute tf_import_commands_network_major-objects_nonGF.sh before executing the other scripts.")
     print("=====================================================================================================================")
+
     # Update modified path list
-    regions_path = export_regions
+    regions_path = export_regions.copy()
     regions_path.append("global")
     service_dirs.append("rpc")
     update_path_list(regions_path=regions_path, service_dirs=service_dirs)
@@ -644,7 +645,7 @@ def create_network(options=[], sub_options=[]):
             create_drg_connectivity(inputfile, outdir, service_dir_network, prefix, ct, non_gf_tenancy=non_gf_tenancy)
             service_dirs.append(service_dir_network) if service_dir_network not in service_dirs else service_dirs
     # Update modified path list
-    regions_path = subscribed_regions
+    regions_path = subscribed_regions.copy()
     regions_path.append("global")
     service_dirs.append("rpc")
     update_path_list(regions_path=regions_path, service_dirs=service_dirs)

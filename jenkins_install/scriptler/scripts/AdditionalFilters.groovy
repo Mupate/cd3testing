@@ -88,8 +88,10 @@ for (item in SubOptions.split(",")) {
 <tr>
    <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"orm_region=[\"></td>
      <td><label title=\"service1-label\" class=\" \">Enter region (comma separated without spaces if multiple) for which you want to upload Terraform Stack - eg ashburn,phoenix,global : </label></td>
-         <td><input type=\"text\" class=\" \" name=\"value\" > </br></td>
+     <td><input type=\"text\" class=\" \" name=\"value\" > </br></td>
+     <td>(Leave empty for all subscribed regions) </td>
    <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"]@\"></td>
+
        </tr>
 <tr>
    <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"orm_compartments=[\"></td>
