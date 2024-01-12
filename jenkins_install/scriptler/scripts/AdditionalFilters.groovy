@@ -30,7 +30,7 @@ for (item in SubOptions.split(",")) {
 
        <tr>
    <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"ins_pattern_filter=[\"></td>
-    <td><label title=\"service1-label\" class=\" \">Compute Instance Pattern Filter :  </label></td>
+    <td><label title=\"service1-label\" class=\" \">Display Name Pattern Filter for Compute : </label></td>
     <td>
     <input type=\"text\" class=\" \" name=\"value\" > </br>
     </td>
@@ -38,11 +38,13 @@ for (item in SubOptions.split(",")) {
 
      <tr>
    <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"ins_ad_filter=[\"></td>
-    <td><label title=\"service1-label\" class=\" \">Compute instance AD filter : </label></td>
+    <td><label title=\"service1-label\" class=\" \">AD filter for Compute : </label></td>
     <td>
     <input type=\"text\" class=\" \" name=\"value\" > </br>
     </td>
+    <td>(eg AD1,AD2,AD3)</td>
    <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"]@\"></td></tr>
+
 
 
       """
@@ -53,15 +55,16 @@ for (item in SubOptions.split(",")) {
       ${html_to_be_rendered}
        <tr>
    <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"bv_pattern_filter=[\"></td>
-    <td><label title=\"service1-label\" class=\" \">Block Volume Pattern filter : </label></td>
+    <td><label title=\"service1-label\" class=\" \">Display Name Pattern filter for Block Volume : </label></td>
     <td>
     <input type=\"text\" class=\" \" name=\"value\" > </br>
     </td>
    <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"]@\"></td></tr>
  <tr>
    <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"bv_ad_filter=[\"></td>
-    <td><label title=\"service1-label\" class=\" \">Block Volume AD filter : </label></td>
+    <td><label title=\"service1-label\" class=\" \">AD filter for Block Volume : </label></td>
     <td><input type=\"text\" class=\" \" name=\"value\" > </br></td>
+    <td>(eg AD1,AD2,AD3)</td>
    <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"]@\"></td></tr>
       """
    }

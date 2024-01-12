@@ -30,22 +30,26 @@ def non_gf_options_map = [
   if (MainOptions.split(",").size() > 0) {
   for (mitem in MainOptions.split(",")) {
 	if (mitem.contains("Tag") || mitem.contains("OCVS") ) {
-    	if (valid_params == ""){
-      		valid_params = "Passed"
-    	}
+    	if (valid_params == "" || valid_params == "Passed") {
+				valid_params = "Passed"
+              }
     	continue
 	}
  	for (sitem in SubOptions.split(",")) {
 		if (Workflow.toLowerCase().contains("create")){
 			if (sitem in gf_options_map[mitem]) {
+				if (valid_params == "" || valid_params == "Passed") {
 				valid_params = "Passed"
+              }
 			}else {
 				valid_params = "Failed"
               	println("Failed for ${mitem}")
 			}		
 		}else {
 			if (sitem in non_gf_options_map[mitem]) {
+				if (valid_params == "" || valid_params == "Passed") {
 				valid_params = "Passed"
+              }
 			}else {
 				valid_params = "Failed"
                 println("Failed - ${mitem}")
@@ -57,7 +61,9 @@ def non_gf_options_map = [
         	valid_params = "Failed"
             println("Failed - ${sitem}")
         }else {
-        valid_params = "Passed"
+        if (valid_params == "" || valid_params == "Passed") {
+				valid_params = "Passed"
+              }
         }
       }
 	}
