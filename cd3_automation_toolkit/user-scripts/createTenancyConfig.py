@@ -47,9 +47,10 @@ def paginate(operation, *args, **kwargs):
 def create_devops_resources(config,signer):
     resource_search = oci.resource_search.ResourceSearchClient(config, retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY,
                                                                signer=signer)
+    toolkit_topic_id = ''
     if not devops_exists:
         # Check existence of Topic
-        toolkit_topic_id = ''
+
         ons_query = 'query onstopic resources where displayname = \''+topic_name+'\''
         ons_search_details = oci.resource_search.models.StructuredSearchDetails(type='Structured',
                                                                                 query=ons_query)
@@ -97,6 +98,9 @@ def create_devops_resources(config,signer):
                                                 signer=signer)
     # Create Devops Project
     if toolkit_project_id=='':
+        if (toolkit_topic_id==''):
+            print("Topic ID is empty while creating Project - "+project_name+". Please check your input properties file")
+            exit(1)
         create_project_response = devops_client.create_project(
             create_project_details=oci.devops.models.CreateProjectDetails(
                 name=project_name,
@@ -484,12 +488,12 @@ elif auth_mechanism=='session_token':
                                                                                                               "key_file = "+_key_path+"\n"
                                                                                                                                                   "region = "+region+"\n")
     '''
-    # move config file to customer specific directory and create symlink for TF execution
+    # copy config file to customer specific directory and create symlink for TF execution
     config_file_path_user_home = user_dir + "/.oci/config"
     # To take care of multiple executions of createTenancyConfig,py
     if not os.path.islink(config_file_path_user_home):
-        shutil.copy(config_file_path_user_home,config_file_path_user_home + "_backup_" + datetime.datetime.now().strftime("%d-%m-%H%M%S").replace('/', '-'))
-        shutil.move(config_file_path_user_home, config_file_path)
+        #shutil.copy(config_file_path_user_home,config_file_path_user_home + "_backup_" + datetime.datetime.now().strftime("%d-%m-%H%M%S").replace('/', '-'))
+        shutil.copy(config_file_path_user_home, config_file_path)
         src = config_file_path
         dst = config_file_path_user_home
         try:
@@ -513,6 +517,11 @@ ct = commonTools()
 config, signer = ct.authenticate(auth_mechanism, config_file_path)
 ct.get_subscribedregions(config,signer)
 home_region = ct.home_region
+
+## Fetch OCI_regions
+cd3service = cd3Services()
+print("")
+cd3service.fetch_regions(config, signer)
 
 ## Check the remote state requirements
 backend_file = open(modules_dir + "/backend.tf", 'r')
@@ -543,8 +552,18 @@ if remote_state == "yes":
             identity_client = oci.identity.IdentityClient(config=new_config,
                                                           retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY,
                                                           signer=signer)
-            user_data = identity_client.list_users(compartment_id=tenancy,name=remote_state_user).data
-            remote_state_user = user_data[0].id
+            user_data = identity_client.list_users(compartment_id=tenancy).data
+
+            found=0
+            for user_d in user_data:
+                if user_d.name==remote_state_user and user_d.lifecycle_state=="ACTIVE":
+                    remote_state_user = user_d.id
+                    found =1
+                    break
+            if found == 0:
+                print("Unable to find the user ocid for creating customer secret key. Exiting...")
+                exit(1)
+
 
         # check if credential exists
         key_exists = False
@@ -557,7 +576,7 @@ if remote_state == "yes":
                 identity_client.delete_customer_secret_key(user_id=remote_state_user,customer_secret_key_id=customer_secret_key_id)
 
         if (len(list_customer_secret_key_response) > 1) and not key_exists:
-            print("\nUser ("+ remote_state_user +") already has max customer secret keys created. Cannot create a new one to be used with toolkit for tfstate remote management.  Please clear the existing keys or use different user. Existing...")
+            print("\nUser ("+ remote_state_user +") already has max customer secret keys created. Cannot create a new one to be used with toolkit for tfstate remote management.  Please clear the existing keys or use different user. Exiting...")
             exit(1)
         create_customer_secret_key_response = identity_client.create_customer_secret_key(
             create_customer_secret_key_details=oci.identity.models.CreateCustomerSecretKeyDetails(
@@ -591,11 +610,6 @@ else:
     for line in backend_file_data:
         global_backend_file_data += line
 
-
-## Fetch OCI_regions
-cd3service = cd3Services()
-print("")
-cd3service.fetch_regions(config, signer)
 
 '''
 # 3. Fetch AD Names and write to config file
