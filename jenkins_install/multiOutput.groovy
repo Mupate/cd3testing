@@ -83,7 +83,7 @@ pipeline {
             }
 
             options {
-                timeout(time: 10, unit: 'MINUTES')
+                timeout(time: 1440, unit: 'MINUTES')                            // 24 hours timeout
             }
     
             steps {
