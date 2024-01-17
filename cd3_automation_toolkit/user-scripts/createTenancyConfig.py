@@ -529,7 +529,7 @@ backend_file_data = backend_file.readlines()
 global_backend_file_data = ""
 
 if remote_state == "yes":
-    print("\nCreating Tenancy specific remote tfstate Items - bucket, aws credentials.................")
+    print("\nCreating Tenancy specific remote tfstate Items - bucket, S3 credentials.................")
     s3_credential_file_path = config_files + "/" + prefix + "_s3_credentials"
     buckets_client = ObjectStorageClient(config=config,
                                          retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY,
@@ -565,31 +565,66 @@ if remote_state == "yes":
                 exit(1)
 
 
-        # check if credential exists
-        key_exists = False
+        # check if S3 credential exists
+        customer_secret_key_id=''
+        credential_file_data=''
         list_customer_secret_key_response = identity_client.list_customer_secret_keys(user_id=remote_state_user).data
         for keys in list_customer_secret_key_response:
             if keys.display_name == cred_name:
-                key_exists = True
-                print("Another Customer secret key exists with same name. Deleting existing key and creating new key...")
-                customer_secret_key_id = keys.id
-                identity_client.delete_customer_secret_key(user_id=remote_state_user,customer_secret_key_id=customer_secret_key_id)
+                customer_secret_key_id=keys.id
+                break
 
-        if (len(list_customer_secret_key_response) > 1) and not key_exists:
-            print("\nUser ("+ remote_state_user +") already has max customer secret keys created. Cannot create a new one to be used with toolkit for tfstate remote management.  Please clear the existing keys or use different user. Exiting...")
-            exit(1)
-        create_customer_secret_key_response = identity_client.create_customer_secret_key(
-            create_customer_secret_key_details=oci.identity.models.CreateCustomerSecretKeyDetails(
-                display_name=cred_name),
-            user_id=remote_state_user).data
-        credential_file_data="[default]\naws_access_key_id="+str(create_customer_secret_key_response.id)+"\naws_secret_access_key="+create_customer_secret_key_response.key+"\n"
+        if customer_secret_key_id!='':
+            # Delete existing key with same name from user profile if S3 credential file is missing and create new one
+            if not os.path.exists(s3_credential_file_path):
+                identity_client.delete_customer_secret_key(user_id=remote_state_user,
+                                                   customer_secret_key_id=customer_secret_key_id)
+
+                create_customer_secret_key_response = identity_client.create_customer_secret_key(create_customer_secret_key_details=oci.identity.models.CreateCustomerSecretKeyDetails(display_name=cred_name),user_id=remote_state_user).data
+                credential_file_data="[default]\naws_access_key_id="+str(create_customer_secret_key_response.id)+"\naws_secret_access_key="+create_customer_secret_key_response.key+"\n"
+            # If S3 Crednetials file exists
+            elif os.path.exists(s3_credential_file_path):
+                text = "aws_access_key_id="+customer_secret_key_id+""
+                f = open(f"{s3_credential_file_path}", "r")
+                same_key=0
+                existing_credential_file_lines = f.readlines()
+                for line in existing_credential_file_lines:
+                    if text == line.strip():
+                        same_key=1
+                        break
+
+                #If Access Key id is different then delete the existing key and create new one
+                if same_key == 0 :
+                    identity_client.delete_customer_secret_key(user_id=remote_state_user,
+                                                           customer_secret_key_id=customer_secret_key_id)
+
+                    create_customer_secret_key_response = identity_client.create_customer_secret_key(
+                    create_customer_secret_key_details=oci.identity.models.CreateCustomerSecretKeyDetails(
+                        display_name=cred_name), user_id=remote_state_user).data
+                    credential_file_data = "[default]\naws_access_key_id=" + str(
+                    create_customer_secret_key_response.id) + "\naws_secret_access_key=" + create_customer_secret_key_response.key + "\n"
+                else:
+                    print("Continuing to use existing customer secret key\n")
+
+        #Create New Key
+        if customer_secret_key_id == '':
+            if (len(list_customer_secret_key_response) > 1):
+                print("\nUser (" + remote_state_user + ") already has max customer secret keys created. Cannot create a new one to be used with toolkit for tfstate remote management.  Please clear the existing keys or use different user. Exiting...")
+                exit(1)
+            create_customer_secret_key_response = identity_client.create_customer_secret_key(
+                create_customer_secret_key_details=oci.identity.models.CreateCustomerSecretKeyDetails(
+                    display_name=cred_name), user_id=remote_state_user).data
+            credential_file_data = "[default]\naws_access_key_id=" + str(create_customer_secret_key_response.id) + "\naws_secret_access_key=" + create_customer_secret_key_response.key + "\n"
+
     except Exception as e:
         print(e)
         # Add code to ask domain name/url and generate creds
 
-    f = open(f"{s3_credential_file_path}", "w+")
-    f.write(credential_file_data)
-    f.close()
+    if credential_file_data!='':
+        print("Creating new customer secret key\n")
+        f = open(f"{s3_credential_file_path}", "w+")
+        f.write(credential_file_data)
+        f.close()
 
     for line in backend_file_data:
         if line.__contains__("This line will be removed when using remote state"):
