@@ -146,6 +146,10 @@ Previously uploaded file will be used if left empty.</description>
             <scriptlerScriptId>AdditionalFilters.groovy</scriptlerScriptId>
             <parameters class="linked-hash-map">
               <entry>
+                <string>SubChildOptions</string>
+                <string>${SubChildOptions}</string>
+              </entry>
+              <entry>
                 <string>SubOptions</string>
                 <string>${SubOptions}</string>
               </entry>
@@ -160,6 +164,10 @@ Previously uploaded file will be used if left empty.</description>
               <propagateParams>false</propagateParams>
               <parameters>
                 <org.jenkinsci.plugins.scriptler.config.Parameter>
+                  <name>SubChildOptions</name>
+                  <value>${SubChildOptions}</value>
+                </org.jenkinsci.plugins.scriptler.config.Parameter>
+                <org.jenkinsci.plugins.scriptler.config.Parameter>
                   <name>SubOptions</name>
                   <value>${SubOptions}</value>
                 </org.jenkinsci.plugins.scriptler.config.Parameter>
@@ -172,7 +180,7 @@ Previously uploaded file will be used if left empty.</description>
             <isSandboxed>true</isSandboxed>
           </script>
           <parameters class="linked-hash-map"/>
-          <referencedParameters>Workflow,SubOptions</referencedParameters>
+          <referencedParameters>Workflow,SubOptions,SubChildOptions</referencedParameters>
           <choiceType>ET_FORMATTED_HTML</choiceType>
           <omitValueField>false</omitValueField>
         </org.biouno.unochoice.DynamicReferenceParameter>
@@ -257,13 +265,13 @@ properties([
             choiceType: 'ET_FORMATTED_HTML',
             description: 'Select additional filters',
             name: 'AdditionalFilters',
-            referencedParameters: 'Workflow,SubOptions',
+            referencedParameters: 'Workflow,SubOptions,SubChildOptions',
              script: [
                 $class: 'ScriptlerScript',
                 scriptlerScriptId: 'AdditionalFilters.groovy',
                 parameters: [
                     [name:'SubOptions', value: '${SubOptions}'],
-																  
+					[name:'SubChildOptions', value: '${SubChildOptions}'],
                     [name:'Workflow', value: '${Workflow}']
                 ]
             ]
@@ -294,6 +302,11 @@ pipeline {
                             exlfile_check = sh(script: '''
                                 set +x
                                 if [[ -n "$Excel_Template_FILENAME" ]];then
+								re="[[:space:]]+"
+	                                if [[ $Excel_Template_FILENAME =~ $re ]]; then
+                                    set -x &amp;&amp; echo "${Excel_Template_FILENAME} contains white space in filename which is not supported." &amp;&amp; set +x
+                                        echo "Failed"
+                                    fi
                                     size=$(wc --bytes &lt; "$Excel_Template")
                                     if [[ ( $size -gt 300000 ) || ( $Excel_Template_FILENAME != *.xlsx ) ]]; then
                                         echo "Failed"
@@ -310,7 +323,7 @@ pipeline {
                 }
         		script {
         		    def ParametersValidationScript = load "$JENKINS_HOME/scriptler/scripts/ValidateParams.groovy"
-                    ParametersValidation = ParametersValidationScript.validate_params(MainOptions,SubOptions,Workflow,AdditionalFilters)
+                    ParametersValidation = ParametersValidationScript.validate_params(Workflow,MainOptions,SubOptions,SubChildOptions,AdditionalFilters)
                     if (ParametersValidation == "Passed" &amp;&amp; file_check == "Passed") {
                         echo 'Parameter Validation Successful.'
 

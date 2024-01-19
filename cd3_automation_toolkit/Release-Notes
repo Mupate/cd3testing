@@ -1,5 +1,6 @@
 -------------------------------------
 CD3 Automation Toolkit Tag v2024.1.0
+Jan 31st, 2024
 -------------------------------------
 1. Support for multiple Authentication Mechanisms for OCI SDK - API Key, Session Token, Instance Principal
 2. Support for toolkit via CI/CD pipelines for setUpOCI as well as terraform actions

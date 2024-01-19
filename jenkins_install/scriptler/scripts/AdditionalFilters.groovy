@@ -6,7 +6,7 @@ html_to_be_rendered = """
     ${html_to_be_rendered}
     <tr>
    <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"reg_filter=[\"></td>
-    <td><label title=\"service1-label\" class=\" \">Region Filter : </label></td>
+    <td><label title=\"service1-label\" class=\" \">Region Filter (eg ashburn) : </label></td>
     <td><input type=\"text\" class=\" \" name=\"value\" > </br></td>
     <td>(Leave empty for all subscribed regions) </td>
    <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"]@\"></td>
@@ -161,6 +161,27 @@ for (item in SubOptions.split(",")) {
    }
 
 }
+
+for (item in SubChildOptions.split(",")) {
+	if (item in ["Export Security Rules (From OCI into SecRulesinOCI sheet)","Export Route Rules (From OCI into RouteRulesinOCI sheet)","Export DRG Route Rules (From OCI into DRGRouteRulesinOCI sheet)","Export NSGs (From OCI into NSGs sheet)"]) {
+
+	html_to_be_rendered = """
+        ${html_to_be_rendered}
+
+<tr>
+   <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"comp_filter=[\"></td>
+    <td><label title=\"service1-label\" class=\" \">Enter Compartment name to export SECURITY RULES/ROUTE RULES/DRG ROUTE RULES/NSGs : </label></td>
+    <td><input type=\"text\" class=\" \" name=\"value\" > </br></td>
+    <td>(Leave empty to fetch from all compartments)</td>
+   <td><input type=\"hidden\" id=\"sep1\" name=\"value\" value=\"]@\"></td>
+    </tr>
+
+         """
+
+	}
+  break
+}
+
 
 html_to_be_rendered = "${html_to_be_rendered} </tr></table>"
 
